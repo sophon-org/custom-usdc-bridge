@@ -21,3 +21,5 @@ node_modules/
 
 # Libraries
 lib/
+
+lcov.info
