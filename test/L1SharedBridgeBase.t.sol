@@ -35,11 +35,7 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
     function test_bridgehubDeposit_Eth() public {
         vm.deal(bridgehubAddress, amount);
         vm.prank(bridgehubAddress);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
         bytes32 txDataHash = keccak256(abi.encode(alice, ETH_TOKEN_ADDRESS, amount));
         // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
@@ -62,9 +58,7 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
         // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
         bytes32 txDataHash = keccak256(abi.encode(alice, address(token), amount));
         emit BridgehubDepositInitiated({
@@ -152,12 +146,7 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
-        emit ClaimedFailedDepositSharedBridge({
-            chainId: chainId,
-            to: alice,
-            l1Token: ETH_TOKEN_ADDRESS,
-            amount: amount
-        });
+        emit ClaimedFailedDepositSharedBridge({chainId: chainId, to: alice, l1Token: ETH_TOKEN_ADDRESS, amount: amount});
         sharedBridge.claimFailedDeposit({
             _chainId: chainId,
             _depositSender: alice,
@@ -176,17 +165,12 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         _setSharedBridgeChainBalance(chainId, ETH_TOKEN_ADDRESS, amount);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         bytes memory message = abi.encodePacked(IMailbox.finalizeEthWithdrawal.selector, alice, amount);
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            data: message
-        });
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -220,22 +204,13 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         _setSharedBridgeChainBalance(chainId, address(token), amount);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: l2SharedBridge,
-            data: message
-        });
+        bytes memory message =
+            abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -268,23 +243,12 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
         vm.deal(address(sharedBridge), amount);
 
         _setSharedBridgeChainBalance(chainId, ETH_TOKEN_ADDRESS, amount);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
 
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            ETH_TOKEN_ADDRESS,
-            amount
-        );
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: l2SharedBridge,
-            data: message
-        });
+        bytes memory message =
+            abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, ETH_TOKEN_ADDRESS, amount);
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -317,23 +281,12 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
         token.mint(address(sharedBridge), amount);
 
         _setSharedBridgeChainBalance(chainId, address(token), amount);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
 
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            data: message
-        });
+        bytes memory message =
+            abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -367,18 +320,11 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         _setSharedBridgeChainBalance(chainId, address(token), amount);
 
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
+        bytes memory message =
+            abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
         vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(2))); //alt base token
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: l2SharedBridge,
-            data: message
-        });
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -418,24 +364,17 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
         );
 
         vm.mockCall(
-            eraDiamondProxy,
-            abi.encodeWithSelector(IGetters.isEthWithdrawalFinalized.selector),
-            abi.encode(false)
+            eraDiamondProxy, abi.encodeWithSelector(IGetters.isEthWithdrawalFinalized.selector), abi.encode(false)
         );
 
         _setSharedBridgeChainBalance(eraChainId, ETH_TOKEN_ADDRESS, amount);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         bytes memory message = abi.encodePacked(IMailbox.finalizeEthWithdrawal.selector, alice, amount);
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            data: message
-        });
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR, data: message});
 
         vm.mockCall(
             bridgehubAddress,

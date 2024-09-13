@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L1SharedBridge} from "@era-contracts/l1-contracts/contracts/bridge/L1SharedBridge.sol";
+import {L1SharedBridge} from "../../src/L1SharedBridge.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {TestnetERC20Token} from "@era-contracts/l1-contracts/contracts/dev-contracts/TestnetERC20Token.sol";
 
@@ -14,10 +14,7 @@ contract L1SharedBridgeTest is Test {
     using stdStorage for StdStorage;
 
     event BridgehubDepositBaseTokenInitiated(
-        uint256 indexed chainId,
-        address indexed from,
-        address l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed from, address l1Token, uint256 amount
     );
 
     event BridgehubDepositInitiated(
@@ -30,23 +27,15 @@ contract L1SharedBridgeTest is Test {
     );
 
     event BridgehubDepositFinalized(
-        uint256 indexed chainId,
-        bytes32 indexed txDataHash,
-        bytes32 indexed l2DepositTxHash
+        uint256 indexed chainId, bytes32 indexed txDataHash, bytes32 indexed l2DepositTxHash
     );
 
     event WithdrawalFinalizedSharedBridge(
-        uint256 indexed chainId,
-        address indexed to,
-        address indexed l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed to, address indexed l1Token, uint256 amount
     );
 
     event ClaimedFailedDepositSharedBridge(
-        uint256 indexed chainId,
-        address indexed to,
-        address indexed l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed to, address indexed l1Token, uint256 amount
     );
 
     event LegacyDepositInitiated(
@@ -114,19 +103,17 @@ contract L1SharedBridgeTest is Test {
 
         token = new TestnetERC20Token("TestnetERC20Token", "TET", 18);
         sharedBridgeImpl = new L1SharedBridge({
-            _l1WethAddress: l1WethAddress,
+            _l1UsdcAddress: address(token),
             _bridgehub: IBridgehub(bridgehubAddress),
             _eraChainId: eraChainId,
             _eraDiamondProxy: eraDiamondProxy
         });
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
-            address(sharedBridgeImpl),
-            proxyAdmin,
-            abi.encodeWithSelector(L1SharedBridge.initialize.selector, owner)
+            address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1SharedBridge.initialize.selector, owner)
         );
         sharedBridge = L1SharedBridge(payable(sharedBridgeProxy));
-        vm.prank(owner);
-        sharedBridge.setL1Erc20Bridge(l1ERC20BridgeAddress);
+        // vm.prank(owner);
+        // sharedBridge.setL1Erc20Bridge(l1ERC20BridgeAddress);
         vm.prank(owner);
         sharedBridge.setEraPostDiamondUpgradeFirstBatch(eraPostUpgradeFirstBatch);
         vm.prank(owner);
@@ -144,20 +131,14 @@ contract L1SharedBridgeTest is Test {
     }
 
     function _setSharedBridgeDepositHappened(uint256 _chainId, bytes32 _txHash, bytes32 _txDataHash) internal {
-        stdstore
-            .target(address(sharedBridge))
-            .sig(sharedBridge.depositHappened.selector)
-            .with_key(_chainId)
-            .with_key(_txHash)
-            .checked_write(_txDataHash);
+        stdstore.target(address(sharedBridge)).sig(sharedBridge.depositHappened.selector).with_key(_chainId).with_key(
+            _txHash
+        ).checked_write(_txDataHash);
     }
 
     function _setSharedBridgeChainBalance(uint256 _chainId, address _token, uint256 _value) internal {
-        stdstore
-            .target(address(sharedBridge))
-            .sig(sharedBridge.chainBalance.selector)
-            .with_key(_chainId)
-            .with_key(_token)
-            .checked_write(_value);
+        stdstore.target(address(sharedBridge)).sig(sharedBridge.chainBalance.selector).with_key(_chainId).with_key(
+            _token
+        ).checked_write(_value);
     }
 }

@@ -62,11 +62,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         sharedBridge.reinitializeChainGovernance(chainId, address(0));
         vm.deal(bridgehubAddress, amount);
         vm.prank(bridgehubAddress);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
         vm.expectRevert("ShB l2 bridge not deployed");
         // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit{value: amount}(chainId, alice, 0, abi.encode(ETH_TOKEN_ADDRESS, 0, bob));
@@ -82,9 +78,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
     function test_bridgehubDeposit_Eth_baseToken() public {
         vm.prank(bridgehubAddress);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
         vm.expectRevert("ShB: baseToken deposit not supported");
         // solhint-disable-next-line func-named-parameters
@@ -96,11 +90,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         vm.prank(alice);
         token.approve(address(sharedBridge), amount);
         vm.prank(bridgehubAddress);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
         vm.expectRevert("ShB wrong withdraw amount");
         // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit(chainId, alice, 0, abi.encode(ETH_TOKEN_ADDRESS, amount, bob));
@@ -113,9 +103,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         token.approve(address(sharedBridge), amount);
         vm.prank(bridgehubAddress);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
         vm.expectRevert("ShB m.v > 0 for BH d.it 2");
         // solhint-disable-next-line func-named-parameters
@@ -128,9 +116,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         token.approve(address(sharedBridge), amount);
         vm.prank(bridgehubAddress);
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
         vm.mockCall(address(token), abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(10));
         bytes memory message = bytes("5T");
@@ -141,11 +127,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
     function test_bridgehubDeposit_Eth() public {
         vm.prank(bridgehubAddress);
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(address(token))
-        );
+        vm.mockCall(bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(address(token)));
         bytes memory message = bytes("6T");
         vm.expectRevert(message);
         // solhint-disable-next-line func-named-parameters
@@ -286,127 +268,16 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         });
     }
 
-    function test_finalizeWithdrawal_EthOnEth_LegacyTxFinalizedInERC20Bridge() public {
-        vm.deal(address(sharedBridge), amount);
-        uint256 legacyBatchNumber = 0;
-
-        vm.mockCall(
-            l1ERC20BridgeAddress,
-            abi.encodeWithSelector(IL1ERC20Bridge.isWithdrawalFinalized.selector),
-            abi.encode(true)
-        );
-
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
-
-        vm.expectRevert("ShB: legacy withdrawal");
-        sharedBridge.finalizeWithdrawal({
-            _chainId: eraChainId,
-            _l2BatchNumber: legacyBatchNumber,
-            _l2MessageIndex: l2MessageIndex,
-            _l2TxNumberInBatch: l2TxNumberInBatch,
-            _message: message,
-            _merkleProof: merkleProof
-        });
-    }
-
-    function test_finalizeWithdrawal_EthOnEth_LegacyTxFinalizedInSharedBridge() public {
-        vm.deal(address(sharedBridge), amount);
-        uint256 legacyBatchNumber = 0;
-
-        vm.mockCall(
-            l1ERC20BridgeAddress,
-            abi.encodeWithSelector(IL1ERC20Bridge.isWithdrawalFinalized.selector),
-            abi.encode(false)
-        );
-
-        vm.store(
-            address(sharedBridge),
-            keccak256(
-                abi.encode(
-                    l2MessageIndex,
-                    keccak256(
-                        abi.encode(
-                            legacyBatchNumber,
-                            keccak256(abi.encode(eraChainId, isWithdrawalFinalizedStorageLocation))
-                        )
-                    )
-                )
-            ),
-            bytes32(uint256(1))
-        );
-
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
-
-        vm.expectRevert("Withdrawal is already finalized");
-        sharedBridge.finalizeWithdrawal({
-            _chainId: eraChainId,
-            _l2BatchNumber: legacyBatchNumber,
-            _l2MessageIndex: l2MessageIndex,
-            _l2TxNumberInBatch: l2TxNumberInBatch,
-            _message: message,
-            _merkleProof: merkleProof
-        });
-    }
-
-    function test_finalizeWithdrawal_EthOnEth_LegacyTxFinalizedInDiamondProxy() public {
-        vm.deal(address(sharedBridge), amount);
-        uint256 legacyBatchNumber = 0;
-
-        vm.mockCall(
-            l1ERC20BridgeAddress,
-            abi.encodeWithSelector(IL1ERC20Bridge.isWithdrawalFinalized.selector),
-            abi.encode(false)
-        );
-
-        vm.mockCall(
-            eraDiamondProxy,
-            abi.encodeWithSelector(IGetters.isEthWithdrawalFinalized.selector),
-            abi.encode(true)
-        );
-
-        bytes memory message = abi.encodePacked(
-            IL1ERC20Bridge.finalizeWithdrawal.selector,
-            alice,
-            address(token),
-            amount
-        );
-        vm.expectRevert("Withdrawal is already finalized 2");
-
-        sharedBridge.finalizeWithdrawal({
-            _chainId: eraChainId,
-            _l2BatchNumber: legacyBatchNumber,
-            _l2MessageIndex: l2MessageIndex,
-            _l2TxNumberInBatch: l2TxNumberInBatch,
-            _message: message,
-            _merkleProof: merkleProof
-        });
-    }
-
     function test_finalizeWithdrawal_chainBalance() public {
         vm.deal(address(sharedBridge), amount);
 
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         bytes memory message = abi.encodePacked(IMailbox.finalizeEthWithdrawal.selector, alice, amount);
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            data: message
-        });
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -438,17 +309,12 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         vm.deal(address(sharedBridge), amount);
 
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         bytes memory message = abi.encodePacked(IMailbox.finalizeEthWithdrawal.selector, alice, amount);
-        L2Message memory l2ToL1Message = L2Message({
-            txNumberInBatch: l2TxNumberInBatch,
-            sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            data: message
-        });
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -480,9 +346,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         vm.deal(address(sharedBridge), amount);
 
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         bytes memory message = abi.encodePacked(IMailbox.finalizeEthWithdrawal.selector);
@@ -526,9 +390,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         vm.deal(address(sharedBridge), amount);
 
         vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.baseToken.selector),
-            abi.encode(ETH_TOKEN_ADDRESS)
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
 
         // notice that the selector is wrong
@@ -542,79 +404,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
             _l2TxNumberInBatch: l2TxNumberInBatch,
             _message: message,
             _merkleProof: merkleProof
-        });
-    }
-
-    function test_depositLegacyERC20Bridge_l2BridgeNotDeployed() public {
-        uint256 l2TxGasLimit = 100000;
-        uint256 l2TxGasPerPubdataByte = 100;
-        address refundRecipient = address(0);
-
-        vm.prank(owner);
-        sharedBridge.reinitializeChainGovernance(eraChainId, address(0));
-
-        vm.expectRevert("ShB b. n dep");
-        vm.prank(l1ERC20BridgeAddress);
-        sharedBridge.depositLegacyErc20Bridge({
-            _prevMsgSender: alice,
-            _l2Receiver: bob,
-            _l1Token: address(token),
-            _amount: amount,
-            _l2TxGasLimit: l2TxGasLimit,
-            _l2TxGasPerPubdataByte: l2TxGasPerPubdataByte,
-            _refundRecipient: refundRecipient
-        });
-    }
-
-    function test_depositLegacyERC20Bridge_weth() public {
-        uint256 l2TxGasLimit = 100000;
-        uint256 l2TxGasPerPubdataByte = 100;
-        address refundRecipient = address(0);
-
-        vm.expectRevert("ShB: WETH deposit not supported 2");
-        vm.prank(l1ERC20BridgeAddress);
-        sharedBridge.depositLegacyErc20Bridge({
-            _prevMsgSender: alice,
-            _l2Receiver: bob,
-            _l1Token: l1WethAddress,
-            _amount: amount,
-            _l2TxGasLimit: l2TxGasLimit,
-            _l2TxGasPerPubdataByte: l2TxGasPerPubdataByte,
-            _refundRecipient: refundRecipient
-        });
-    }
-
-    function test_depositLegacyERC20Bridge_refundRecipient() public {
-        uint256 l2TxGasLimit = 100000;
-        uint256 l2TxGasPerPubdataByte = 100;
-
-        // solhint-disable-next-line func-named-parameters
-        vm.expectEmit(true, true, true, true, address(sharedBridge));
-
-        emit LegacyDepositInitiated({
-            chainId: eraChainId,
-            l2DepositTxHash: txHash,
-            from: alice,
-            to: bob,
-            l1Token: address(token),
-            amount: amount
-        });
-
-        vm.mockCall(
-            bridgehubAddress,
-            abi.encodeWithSelector(IBridgehub.requestL2TransactionDirect.selector),
-            abi.encode(txHash)
-        );
-
-        vm.prank(l1ERC20BridgeAddress);
-        sharedBridge.depositLegacyErc20Bridge({
-            _prevMsgSender: alice,
-            _l2Receiver: bob,
-            _l1Token: address(token),
-            _amount: amount,
-            _l2TxGasLimit: l2TxGasLimit,
-            _l2TxGasPerPubdataByte: l2TxGasPerPubdataByte,
-            _refundRecipient: address(1)
         });
     }
 }
