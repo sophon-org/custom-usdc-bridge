@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L1SharedBridge} from "../../src/L1SharedBridge.sol";
+import {L1SharedBridge} from "../../L1SharedBridge.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {TestnetERC20Token} from "@era-contracts/l1-contracts/contracts/dev-contracts/TestnetERC20Token.sol";
 

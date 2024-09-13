@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {L2SharedBridge} from "../src/L2SharedBridge.sol";
+import {L2SharedBridge} from "../L2SharedBridge.sol";
 
 contract FinalizeDepositScript is Script {
     L2SharedBridge public bridge;
