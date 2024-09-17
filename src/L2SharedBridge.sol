@@ -9,7 +9,6 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
 import {IL2SharedBridge} from "./interfaces/IL2SharedBridge.sol";
 import {IL2Messenger} from "./interfaces/IL2Messenger.sol";
-// import {AddressAliasHelper} from "@era-contracts/l2-contracts/contracts/vendor/AddressAliasHelper.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -26,16 +25,10 @@ interface MintableToken {
 contract L2SharedBridge is IL2SharedBridge, Initializable {
     using SafeERC20 for IERC20;
 
-    // TODO: do we have a different SYSTEM_CONTRACT_OFFSET IN SOPHON?
     uint160 constant SYSTEM_CONTRACTS_OFFSET = 0x8000; // 2^15
 
     /// @dev The address of the L1 shared bridge counterpart.
     address public override l1SharedBridge;
-
-    // TODO: can i safely remove this?
-    /// @dev The address of the legacy L1 erc20 bridge counterpart.
-    /// This is non-zero only on Era, and should not be renamed for backward compatibility with the SDKs.
-    address public override l1Bridge;
 
     /// @dev Contract is expected to be used as proxy implementation.
     /// @dev Disable the initialization to prevent Parity hack.
@@ -57,14 +50,9 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     /// @notice Initializes the bridge contract for later use. Expected to be used in the proxy.
     /// @param _l1SharedBridge The address of the L1 Bridge contract.
     /// _l1Bridge The address of the legacy L1 Bridge contract.
-    function initialize(address _l1SharedBridge)
-        // address _l1Bridge,
-        external
-        reinitializer(2)
-    {
+    function initialize(address _l1SharedBridge) external reinitializer(2) {
         require(_l1SharedBridge != address(0), "bf");
         l1SharedBridge = _l1SharedBridge;
-        // l1Bridge = _l1Bridge; TODO: do we need this?
     }
 
     /// @notice Finalize the deposit and mint funds
@@ -78,11 +66,7 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         override
     {
         // Only the L1 bridge counterpart can initiate and finalize the deposit.
-        // require(
-        //     AddressAliasHelper.undoL1ToL2Alias(msg.sender) == l1Bridge ||
-        //         AddressAliasHelper.undoL1ToL2Alias(msg.sender) == l1SharedBridge,
-        //     "mq"
-        // );
+        require(undoL1ToL2Alias(msg.sender) == l1SharedBridge, "mq");
         MintableToken(L2_USDC_TOKEN).mint(_l2Receiver, _amount);
         emit FinalizeDeposit(_l1Sender, _l2Receiver, L2_USDC_TOKEN, _amount);
     }
@@ -114,5 +98,28 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
 
     function l2TokenAddress(address _l1Token) public view override returns (address) {
         return L2_USDC_TOKEN;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            UNUSED BUT REQUIRED BY INTERFACE
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev The address of the legacy L1 erc20 bridge counterpart.
+    /// This is non-zero only on Era, and should not be renamed for backward compatibility with the SDKs.
+    address public override l1Bridge;
+
+    /*//////////////////////////////////////////////////////////////
+                            UTILS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Utility function that converts the msg.sender viewed on L2 to the
+    /// address that submitted a tx to the inbox on L1
+    /// @param l2Address L2 address as viewed in msg.sender
+    /// @return l1Address the address in the L1 that triggered the tx to L2
+    function undoL1ToL2Alias(address l2Address) internal pure returns (address l1Address) {
+        uint160 offset = uint160(0x1111000000000000000000000000000000001111);
+        unchecked {
+            l1Address = address(uint160(l2Address) - offset);
+        }
     }
 }

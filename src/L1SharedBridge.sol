@@ -17,7 +17,6 @@ import {IMailbox} from "@era-contracts/l1-contracts/contracts/state-transition/c
 import {L2Message, TxStatus} from "@era-contracts/l1-contracts/contracts/common/Messaging.sol";
 import {UnsafeBytes} from "@era-contracts/l1-contracts/contracts/common/libraries/UnsafeBytes.sol";
 import {ReentrancyGuard} from "@era-contracts/l1-contracts/contracts/common/ReentrancyGuard.sol";
-import {AddressAliasHelper} from "@era-contracts/l1-contracts/contracts/vendor/AddressAliasHelper.sol";
 import {ETH_TOKEN_ADDRESS, TWO_BRIDGES_MAGIC_VALUE} from "@era-contracts/l1-contracts/contracts/common/Config.sol";
 import {
     IBridgehub,
@@ -202,28 +201,20 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         (address _l1Token, uint256 _depositAmount, address _l2Receiver) = abi.decode(_data, (address, uint256, address));
         require(_l1Token == L1_USDC_TOKEN, "ShB: Only USDC deposits supported");
         require(BRIDGE_HUB.baseToken(_chainId) != _l1Token, "ShB: baseToken deposit not supported");
+        require(msg.value == 0, "ShB m.v > 0 for BH d.it 2");
 
-        uint256 amount;
-        if (_l1Token == ETH_TOKEN_ADDRESS) {
-            amount = msg.value;
-            require(_depositAmount == 0, "ShB wrong withdraw amount");
-        } else {
-            require(msg.value == 0, "ShB m.v > 0 for BH d.it 2");
-            amount = _depositAmount;
+        uint256 withdrawAmount = _depositFunds(_prevMsgSender, IERC20(_l1Token), _depositAmount);
+        require(withdrawAmount == _depositAmount, "5T"); // The token has non-standard transfer logic
+        require(_depositAmount != 0, "6T"); // empty deposit amount
 
-            uint256 withdrawAmount = _depositFunds(_prevMsgSender, IERC20(_l1Token), _depositAmount);
-            require(withdrawAmount == _depositAmount, "5T"); // The token has non-standard transfer logic
-        }
-        require(amount != 0, "6T"); // empty deposit amount
-
-        bytes32 txDataHash = keccak256(abi.encode(_prevMsgSender, _l1Token, amount));
+        bytes32 txDataHash = keccak256(abi.encode(_prevMsgSender, _l1Token, _depositAmount));
         if (!hyperbridgingEnabled[_chainId]) {
-            chainBalance[_chainId][_l1Token] += amount;
+            chainBalance[_chainId][_l1Token] += _depositAmount;
         }
 
         {
             // Request the finalization of the deposit on the L2 side
-            bytes memory l2TxCalldata = _getDepositL2Calldata(_prevMsgSender, _l2Receiver, _l1Token, amount);
+            bytes memory l2TxCalldata = _getDepositL2Calldata(_prevMsgSender, _l2Receiver, _l1Token, _depositAmount);
 
             request = L2TransactionRequestTwoBridgesInner({
                 magicValue: TWO_BRIDGES_MAGIC_VALUE,
@@ -233,13 +224,14 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
                 txDataHash: txDataHash
             });
         }
+
         emit BridgehubDepositInitiated({
             chainId: _chainId,
             txDataHash: txDataHash,
             from: _prevMsgSender,
             to: _l2Receiver,
             l1Token: _l1Token,
-            amount: amount
+            amount: _depositAmount
         });
     }
 
@@ -265,7 +257,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         (, bytes memory data1) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.name, ()));
         (, bytes memory data2) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.symbol, ()));
         (, bytes memory data3) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
-        // bytes memory gettersData = _getERC20Getters(_l1Token);
         return abi.encodeCall(
             IL2Bridge.finalizeDeposit, (_l1Sender, _l2Receiver, _l1Token, _amount, abi.encode(data1, data2, data3))
         );
@@ -316,26 +307,24 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         uint16 _l2TxNumberInBatch,
         bytes32[] calldata _merkleProof
     ) internal nonReentrant whenNotPaused {
-        {
-            bool proofValid = BRIDGE_HUB.proveL1ToL2TransactionStatus({
-                _chainId: _chainId,
-                _l2TxHash: _l2TxHash,
-                _l2BatchNumber: _l2BatchNumber,
-                _l2MessageIndex: _l2MessageIndex,
-                _l2TxNumberInBatch: _l2TxNumberInBatch,
-                _merkleProof: _merkleProof,
-                _status: TxStatus.Failure
-            });
-            require(proofValid, "yn");
-        }
+        bool proofValid = BRIDGE_HUB.proveL1ToL2TransactionStatus({
+            _chainId: _chainId,
+            _l2TxHash: _l2TxHash,
+            _l2BatchNumber: _l2BatchNumber,
+            _l2MessageIndex: _l2MessageIndex,
+            _l2TxNumberInBatch: _l2TxNumberInBatch,
+            _merkleProof: _merkleProof,
+            _status: TxStatus.Failure
+        });
+        require(proofValid, "yn");
         require(_amount > 0, "y1");
 
-        {
-            bytes32 dataHash = depositHappened[_chainId][_l2TxHash];
-            bytes32 txDataHash = keccak256(abi.encode(_depositSender, _l1Token, _amount));
-            require(dataHash == txDataHash, "ShB: d.it not hap");
-            delete depositHappened[_chainId][_l2TxHash];
-        }
+        // dataHash == txDataHash
+        require(
+            depositHappened[_chainId][_l2TxHash] == keccak256(abi.encode(_depositSender, _l1Token, _amount)),
+            "ShB: d.it not hap"
+        );
+        delete depositHappened[_chainId][_l2TxHash];
 
         if (!hyperbridgingEnabled[_chainId]) {
             // check that the chain has sufficient balance
@@ -458,12 +447,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         require(_l2ToL1message.length >= 56, "ShB wrong msg len"); // wrong message length
 
         (uint32 functionSignature, uint256 offset) = UnsafeBytes.readUint32(_l2ToL1message, 0);
-        if (bytes4(functionSignature) == IMailbox.finalizeEthWithdrawal.selector) {
-            // this message is a base token withdrawal
-            (l1Receiver, offset) = UnsafeBytes.readAddress(_l2ToL1message, offset);
-            (amount, offset) = UnsafeBytes.readUint256(_l2ToL1message, offset);
-            l1Token = BRIDGE_HUB.baseToken(_chainId);
-        } else if (bytes4(functionSignature) == IL1ERC20Bridge.finalizeWithdrawal.selector) {
+        if (bytes4(functionSignature) == IL1ERC20Bridge.finalizeWithdrawal.selector) {
             // We use the IL1ERC20Bridge for backward compatibility with old withdrawals.
 
             // this message is a token withdrawal
