@@ -1,6 +1,5 @@
-## Foundry
+## Custom bridge for Native USDC
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
 Foundry consists of:
 
@@ -18,49 +17,48 @@ https://book.getfoundry.sh/
 ### Build
 
 ```shell
-$ forge build
+$ forge build -C contracts/custom-usdc-bridge/
+
+# zkSync build
+$ forge build -C contracts/custom-usdc-bridge/ --zksync
+```
+
+### Scripts
+
+```shell
+# Deploy L1 Shared Bridge
+$ source .env && forge script ./contracts/custom-usdc-bridge/script/DeployL1SharedBridge.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
+
+# Deploy L2 Shared Bridge
+$ source .env && forge script ./contracts/custom-usdc-bridge/script/DeployL2SharedBridge.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
+
+# Initialise L1 Shared Bridge
+$ source .env && forge script ./contracts/custom-usdc-bridge/script/InitialiseL1Bridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
+
+# Bridge from Sophon to Ethereum (L1 -> L2)
+$ source .env && forge script ./contracts/custom-usdc-bridge/script/BridgeScript.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
+
+# Withdraw from Sophon to Ethereum (L2 -> L1)
+$ source .env && forge script ./contracts/custom-usdc-bridge/script/Withdraw.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --slow -vvvv --broadcast
+
+# Finalise withdrawal on Ethereum
+$ source .env && export L2_WITHDRAWAL_HASH="YOUR_TX_HASH" && forge script ./contracts/custom-usdc-bridge/script/FinalizeWithdrawal.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
 ```
 
 ### Test
 
 ```shell
-$ forge test
+$ forge test -C contracts/custom-usdc-bridge/
 ```
 
 ### Format
 
 ```shell
-$ forge fmt
+$ forge fmt contracts/custom-usdc-bridge/
 ```
 
 ### Gas Snapshots
 
 ```shell
 $ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
