@@ -1,28 +1,21 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.24;
 
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IL1ERC20Bridge} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL1ERC20Bridge.sol";
-import {IL2SharedBridge} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL2SharedBridge.sol";
-import {IL2StandardToken} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL2StandardToken.sol";
+import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
+import {IL2SharedBridge} from "./interfaces/IL2SharedBridge.sol";
+import {IL2Messenger} from "./interfaces/IL2Messenger.sol";
+// import {AddressAliasHelper} from "@era-contracts/l2-contracts/contracts/vendor/AddressAliasHelper.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {L2StandardERC20} from "@era-contracts/l2-contracts/contracts/bridge/L2StandardERC20.sol";
-import {AddressAliasHelper} from "@era-contracts/l2-contracts/contracts/vendor/AddressAliasHelper.sol";
-import {
-    L2ContractHelper,
-    DEPLOYER_SYSTEM_CONTRACT,
-    IContractDeployer
-} from "@era-contracts/l2-contracts/contracts/L2ContractHelper.sol";
-import {SystemContractsCaller} from "@era-contracts/l2-contracts/contracts/SystemContractsCaller.sol";
-
-// TODO: use import
-interface IERC20 {
+interface MintableToken {
     function mint(address _to, uint256 _amount) external;
-    function burn(address _from, uint256 _amount) external;
+    function burn(uint256 _amount) external;
 }
 
 /// @author Sophon
@@ -31,6 +24,11 @@ interface IERC20 {
 /// @notice The "default" bridge implementation for the ERC20 tokens. Note, that it does not
 /// support any custom token logic, i.e. rebase tokens' functionality is not supported.
 contract L2SharedBridge is IL2SharedBridge, Initializable {
+    using SafeERC20 for IERC20;
+
+    // TODO: do we have a different SYSTEM_CONTRACT_OFFSET IN SOPHON?
+    uint160 constant SYSTEM_CONTRACTS_OFFSET = 0x8000; // 2^15
+
     /// @dev The address of the L1 shared bridge counterpart.
     address public override l1SharedBridge;
 
@@ -85,7 +83,7 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         //         AddressAliasHelper.undoL1ToL2Alias(msg.sender) == l1SharedBridge,
         //     "mq"
         // );
-        IERC20(L2_USDC_TOKEN).mint(_l2Receiver, _amount);
+        MintableToken(L2_USDC_TOKEN).mint(_l2Receiver, _amount);
         emit FinalizeDeposit(_l1Sender, _l2Receiver, L2_USDC_TOKEN, _amount);
     }
 
@@ -97,12 +95,15 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     function withdraw(address _l1Receiver, address, uint256 _amount) external override {
         require(_amount > 0, "Amount cannot be zero");
 
-        IERC20(L2_USDC_TOKEN).burn(msg.sender, _amount);
+        // transfer from msg.sender to here and then burn
+        IERC20(L2_USDC_TOKEN).safeTransferFrom(msg.sender, address(this), _amount);
+        MintableToken(L2_USDC_TOKEN).burn(_amount);
 
         // encode the message for l2ToL1log sent with withdraw initialization
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, _l1Receiver, L1_USDC_TOKEN, _amount);
-        L2ContractHelper.sendMessageToL1(message);
+        // L2ContractHelper.sendMessageToL1(message);
+        IL2Messenger(address(SYSTEM_CONTRACTS_OFFSET + 0x08)).sendToL1(message);
 
         emit WithdrawalInitiated(msg.sender, _l1Receiver, L2_USDC_TOKEN, _amount);
     }
