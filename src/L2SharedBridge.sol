@@ -60,8 +60,8 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     /// @param _l2Receiver The account address that would receive minted ether
     /// _l1Token The address of the token that was locked on the L1
     /// @param _amount Total amount of tokens deposited from L1
-    /// @param _data The additional data that user can pass with the deposit
-    function finalizeDeposit(address _l1Sender, address _l2Receiver, address, uint256 _amount, bytes calldata _data)
+    /// _data [UNUSED] The additional data that user can pass with the deposit
+    function finalizeDeposit(address _l1Sender, address _l2Receiver, address, uint256 _amount, bytes calldata)
         external
         override
     {
@@ -92,11 +92,11 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         emit WithdrawalInitiated(msg.sender, _l1Receiver, L2_USDC_TOKEN, _amount);
     }
 
-    function l1TokenAddress(address _l2Token) external view returns (address) {
+    function l1TokenAddress(address) external view returns (address) {
         return L1_USDC_TOKEN;
     }
 
-    function l2TokenAddress(address _l1Token) public view override returns (address) {
+    function l2TokenAddress(address) public view override returns (address) {
         return L2_USDC_TOKEN;
     }
 

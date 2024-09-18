@@ -8,7 +8,7 @@ auto_detect_solc = true
 
 [etherscan]
 sepoliaTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SEPOLIA_VERIFIER_URL}", chain = 11155111 }
-sophonTestnet = { key = "${ETHERSCAN_API_KEY}", url = "https://block-explorer-api.testnet.sophon.xyz/api", chain = 531050104 } 
+sophonTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SOPHON_SEPOLIA_VERIFIER_URL}", chain = 531050104 } 
 
 [rpc_endpoints]
 sepoliaTestnet = "${SEPOLIA_RPC_URL}"

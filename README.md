@@ -27,16 +27,16 @@ $ forge build --zksync
 
 ```shell
 # Deploy L1 Shared Bridge
-$ source .env && forge script ./script/DeployL1SharedBridge.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
+$ source .env && forge script ./script/DeployL1SharedBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
 
 # Deploy L2 Shared Bridge
 $ source .env && forge script ./script/DeployL2SharedBridge.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
 
 # Initialise L1 Shared Bridge
-$ source .env && forge script ./script/InitialiseL1Bridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --broadcast
+$ source .env && forge script ./script/InitialiseL1SharedBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --broadcast
 
 # Bridge from Sophon to Ethereum (L1 -> L2)
-$ source .env && forge script ./script/BridgeScript.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
+$ source .env && forge script ./script/Bridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
 
 # Withdraw from Sophon to Ethereum (L2 -> L1)
 $ source .env && forge script ./script/Withdraw.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --slow -vvvv --broadcast

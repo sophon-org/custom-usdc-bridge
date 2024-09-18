@@ -8,20 +8,79 @@ import {
     IBridgehub
 } from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 
+interface MockUSDC {
+    function approve(address usr, uint256 wad) external;
+}
+
 contract BridgeScript is Script {
-    address public constant SEPOLIA_L1_BRIDGEHUB = 0x35A54c8C757806eB6820629bc82d90E056394C92; // Ethereum Sepolia
-    address public constant SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1 = 0x8dA770B66f6F4F71068Fe5Dd1cB879a0353f90D8; // Ethereum Sepolia
-
-    address public constant SOPHON_CUSTOM_ERC20_SHARED_BRIDGE_L2 = 0x7147d704Ba0E1F146457Dc93806FE66c201aA7C5; // Sophon Sepolia
-    address L1_USDC_ADDRESS = 0xBF4FdF7BF4014EA78C0A07259FBc4315Cb10d94E; // MockUSDC on Sepolia testnet
-    address L2_USDC_ADDRESS = 0x27553b610304b6AB77855a963f8208443D773E60; // Native USDC on Sophon testnet
-    address public constant SOPH_TOKEN = 0x06c03F9319EBbd84065336240dcc243bda9D8896; // SOPH
-
-    uint256 L2_GAS_LIMIT = 435293;
-    uint256 TX_GAS_PER_PUBDATA_BYTE_LIMIT = 800;
-    uint256 CHAIN_ID = 531050104; // Sophon Sepolia
-
     function setUp() public {}
+
+    function run() public {
+        vm.startBroadcast();
+        uint256 amountToBridge = 1 * 10 ** 6; // 1 USDC
+
+        approve(vm.envAddress("SOPH_TOKEN"), type(uint256).max);
+        approve(vm.envAddress("L1_USDC_TOKEN"), amountToBridge);
+        bridge(amountToBridge);
+
+        vm.stopBroadcast();
+    }
+
+    function bridge(uint256 amountToBridge) public {
+        uint256 L2_GAS_LIMIT = 435293;
+        uint256 TX_GAS_PER_PUBDATA_BYTE_LIMIT = 800;
+        uint256 CHAIN_ID = vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"); // Sophon Sepolia
+
+        // Prepare data for the bridgehubDeposit call
+        bytes memory depositData = abi.encode(
+            vm.envAddress("L1_USDC_TOKEN"),
+            amountToBridge,
+            msg.sender // sender is the recipient of the tokens on L2
+        );
+
+        // TODO: gasPrice() call sometimes fails sometimes not, why?
+        // uint256 l2GasPrice = gasPrice();
+        // console.log("Gas price:", l2GasPrice);
+        // uint256 baseCost = IBridgehub(SEPOLIA_L1_BRIDGEHUB).l2TransactionBaseCost(
+        //     CHAIN_ID, l2GasPrice, L2_GAS_LIMIT, TX_GAS_PER_PUBDATA_BYTE_LIMIT
+        // );
+        // // TODO: why baseCost is returning a very high number?
+        // console.log("Base cost:", baseCost);
+
+        IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")).requestL2TransactionTwoBridges( // No vale needed if base token is not ETH (e.g SOPH)
+            L2TransactionRequestTwoBridgesOuter({
+                chainId: CHAIN_ID,
+                mintValue: 4e18, // base tokens (SOPH for Sophon Sepolia, ETH for Sepolia)
+                // mintValue: baseCost,
+                l2Value: 0,
+                l2GasLimit: L2_GAS_LIMIT, // TODO: it should take ~300'000
+                l2GasPerPubdataByteLimit: TX_GAS_PER_PUBDATA_BYTE_LIMIT, // TODO: how to calculate?
+                refundRecipient: address(0), // TODO: why is 0?
+                secondBridgeAddress: vm.envAddress("SEPOLIA_CUSTOM_SHARED_BRIDGE_L1"),
+                secondBridgeValue: 0,
+                secondBridgeCalldata: depositData
+            })
+        );
+    }
+
+    function approve(address token, uint256 amount) public {
+        IERC20 token = IERC20(token);
+        address l1Bridge = vm.envAddress("SEPOLIA_CUSTOM_SHARED_BRIDGE_L1");
+
+        // approve shared bridge to spend base tokens
+        console.log("Checking %s allowance...", token.symbol());
+        uint256 allowance = token.allowance(msg.sender, l1Bridge);
+        if (allowance < amount) {
+            console.log("Approving...");
+            if (address(token) == vm.envAddress("L1_USDC_TOKEN")) {
+                MockUSDC(address(token)).approve(l1Bridge, amount);
+            } else {
+                token.approve(l1Bridge, amount);
+            }
+            console.log("New allowance:", token.allowance(msg.sender, l1Bridge));
+        }
+        console.log("%s allowance OK", token.symbol());
+    }
 
     function gasPrice() public returns (uint256 price) {
         // cast gas-price --rpc-url https://rpc.testnet.sophon.xyz/
@@ -33,70 +92,5 @@ contract BridgeScript is Script {
         string memory result = string(vm.ffi(args));
 
         return vm.parseUint(result);
-    }
-
-    function run() public {
-        vm.startBroadcast();
-        uint256 amountToBridge = 1 * 10 ** 6; // 1 LINK
-
-        IERC20 SOPH = IERC20(SOPH_TOKEN);
-        IBridgehub bridge = IBridgehub(SEPOLIA_L1_BRIDGEHUB);
-
-        // Approve bridgehub to spend base tokens
-        console.log("Checking SOPH allowance...");
-        uint256 allowanceSOPH = SOPH.allowance(msg.sender, SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1);
-        if (allowanceSOPH < amountToBridge) {
-            console.log("Approving SOPH for bridge");
-            SOPH.approve(SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1, type(uint256).max);
-            console.log("SOPH allowance:", SOPH.allowance(msg.sender, SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1));
-        }
-        console.log("SOPH allowance OK");
-
-        // TODO: I BELIEVE THIS IS NOT WORKING...
-        // Approve shared bridge to spend MockUSDC tokens
-        console.log("Checking USDC allowance...");
-        IERC20 token = IERC20(L1_USDC_ADDRESS);
-        uint256 allowance = token.allowance(msg.sender, SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1);
-        if (allowance < amountToBridge) {
-            console.log("Approving tokens for bridge");
-            token.approve(SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1, type(uint256).max);
-            console.log("USDC allowance:", token.allowance(msg.sender, SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1));
-        }
-        console.log("USDC allowance OK");
-
-        // Prepare data for the bridgehubDeposit call
-        bytes memory depositData = abi.encode(
-            L1_USDC_ADDRESS,
-            amountToBridge,
-            msg.sender // sender is the recipient of the tokens on L2
-        );
-
-        // TODO: gasPrice() call sometimes fails sometimes not, why?
-
-        // uint256 l2GasPrice = gasPrice();
-        // console.log("Gas price:", l2GasPrice);
-        // uint256 baseCost = IBridgehub(SEPOLIA_L1_BRIDGEHUB).l2TransactionBaseCost(
-        //     CHAIN_ID, l2GasPrice, L2_GAS_LIMIT, TX_GAS_PER_PUBDATA_BYTE_LIMIT
-        // );
-        // // TODO: why baseCost is returning a very high number?
-        // console.log("Base cost:", baseCost);
-
-        // bridge.requestL2TransactionTwoBridges{ value: 4402173869530008 }(
-        bridge.requestL2TransactionTwoBridges( // No vale needed if base token is not ETH (e.g SOPH)
-            L2TransactionRequestTwoBridgesOuter({
-                chainId: CHAIN_ID,
-                mintValue: 2e18, // base tokens (SOPH for Sophon Sepolia, ETH for Sepolia)
-                // mintValue: baseCost,
-                l2Value: 0,
-                l2GasLimit: L2_GAS_LIMIT, // TODO: it should take ~300'000
-                l2GasPerPubdataByteLimit: TX_GAS_PER_PUBDATA_BYTE_LIMIT, // TODO: how to calculate?
-                refundRecipient: address(0), // TODO: why is 0?
-                secondBridgeAddress: SEPOLIA_CUSTOM_ERC20_SHARED_BRIDGE_L1,
-                secondBridgeValue: 0,
-                secondBridgeCalldata: depositData
-            })
-        );
-
-        vm.stopBroadcast();
     }
 }

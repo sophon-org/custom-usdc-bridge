@@ -498,7 +498,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         external
         payable
         override
-        returns (bytes32 l2TxHash)
+        returns (bytes32)
     {
         revert("NOT_IMPLEMENTED");
     }
@@ -507,7 +507,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         external
         pure
         override
-        returns (address l1Receiver, address l1Token, uint256 amount)
+        returns (address, address, uint256)
     {
         revert("NOT_IMPLEMENTED");
     }
