@@ -11,9 +11,6 @@ interface IERC20 {
 contract FinalizeDepositScript is Script {
     L1SharedBridge public bridge;
 
-    address public constant SEPOLIA_CUSTOM_SHARED_BRIDGE_L1 = 0x8dA770B66f6F4F71068Fe5Dd1cB879a0353f90D8; // Ethereum Sepolia TODO: get from ENV
-    uint256 SOPHON_CHAIN_ID = 531050104; // Sophon Sepolia TODO: get from ENV
-
     function setUp() public {}
 
     struct FinalizationData {
@@ -42,7 +39,7 @@ contract FinalizeDepositScript is Script {
         // grab only proof
         args = new string[](5);
         args[0] = "node";
-        args[1] = "contracts/custom-usdc-bridge/script/getWithdrawalParmas";
+        args[1] = "script/getWithdrawalParams";
         args[2] = "--proof";
         args[3] = "--hash";
         args[4] = vm.envString("L2_WITHDRAWAL_HASH");
@@ -56,8 +53,13 @@ contract FinalizeDepositScript is Script {
         vm.startBroadcast();
 
         (FinalizationData memory data, bytes32[] memory merkleProof) = finalizeWithdrawalParams();
-        L1SharedBridge(SEPOLIA_CUSTOM_SHARED_BRIDGE_L1).finalizeWithdrawal(
-            SOPHON_CHAIN_ID, data.l1BatchNumber, data.l2MessageIndex, data.l2TxNumberInBlock, data.message, merkleProof
+        L1SharedBridge(vm.envAddress("SEPOLIA_CUSTOM_SHARED_BRIDGE_L1")).finalizeWithdrawal(
+            vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"),
+            data.l1BatchNumber,
+            data.l2MessageIndex,
+            data.l2TxNumberInBlock,
+            data.message,
+            merkleProof
         );
 
         vm.stopBroadcast();

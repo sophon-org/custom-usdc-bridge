@@ -431,7 +431,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
     function _parseL2WithdrawalMessage(bytes memory _l2ToL1message)
         internal
-        view
+        pure
         returns (address l1Receiver, address l1Token, uint256 amount)
     {
         // We check that the message is long enough to read the data.
