@@ -1,0 +1,14 @@
+{
+  "name": "custom-usdc-bridge",
+  "version": "0.1",
+  "description": "Custom bridge contracts for USDC support",
+  "repository": "",
+  "author": "Sophon",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@openzeppelin/contracts": "4.9.5",
+    "@openzeppelin/contracts-upgradeable": "4.9.5",
+    "era-contracts": "https://github.com/matter-labs/era-contracts.git"
+
+  }
+}
