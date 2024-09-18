@@ -9,6 +9,10 @@
     "@openzeppelin/contracts": "4.9.5",
     "@openzeppelin/contracts-upgradeable": "4.9.5",
     "era-contracts": "https://github.com/matter-labs/era-contracts.git"
-
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "zksync-ethers": "^6.12.1"
   }
 }

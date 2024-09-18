@@ -2,11 +2,12 @@
 src = "contracts"
 out = "out"
 libs = ["lib"]
+auto_detect_solc = true
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [etherscan]
-sepoliaTestnet = { key = "this-is-not-a-real-key", url = "https://api-sepolia.etherscan.io/api", chain = 11155111 }
+sepoliaTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SEPOLIA_VERIFIER_URL}", chain = 11155111 }
 sophonTestnet = { key = "this-is-not-a-real-key", url = "https://api-explorer-verify.testnet.sophon.xyz/contract_verification", chain = 531050104 }
 
 [rpc_endpoints]
