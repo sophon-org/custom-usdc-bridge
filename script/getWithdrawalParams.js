@@ -26,7 +26,13 @@ async function main() {
             console.log(JSON.stringify(finalizationHandle));
         }
     } catch (error) {
-        console.error('Error finalizing withdrawal params:', error);
+        const sender = "0x0000000000000000000000000000000000000000";
+        console.log(JSON.stringify({l1BatchNumber: 0,
+            l2MessageIndex: 0,
+            l2TxNumberInBlock: 0,
+            message: error.message,
+            sender,
+        }))
     }
 }
 

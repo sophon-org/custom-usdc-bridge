@@ -29,11 +29,15 @@ contract FinalizeDepositScript is Script {
         // grab all params except for proof (since it fails)
         string[] memory args = new string[](4);
         args[0] = "node";
-        args[1] = "contracts/custom-usdc-bridge/script/getWithdrawalParams";
+        args[1] = "script/getWithdrawalParams";
         args[2] = "--hash";
         args[3] = vm.envString("L2_WITHDRAWAL_HASH");
         string memory result = string(vm.ffi(args));
         FinalizationData memory data = abi.decode(vm.parseJson(result), (FinalizationData));
+
+        if (data.sender == address(0)) {
+            revert(result);
+        }
 
         // grab only proof
         args = new string[](5);
