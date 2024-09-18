@@ -76,7 +76,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
     /// @notice Checks that the message sender is the bridgehub.
     modifier onlyBridgehub() {
-        require(msg.sender == address(BRIDGE_HUB), "ShB not BH");
+        require(msg.sender == address(BRIDGE_HUB), "USDC-ShB not BH");
         _;
     }
 
@@ -91,13 +91,13 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
     /// @notice Checks that the message sender is the shared bridge itself.
     modifier onlySelf() {
-        require(msg.sender == address(this), "ShB not shared bridge");
+        require(msg.sender == address(this), "USDC-ShB not shared bridge");
         _;
     }
 
     /// @notice Checks that the message sender is either the owner or admin.
     modifier onlyOwnerOrAdmin() {
-        require(msg.sender == owner() || msg.sender == admin, "ShB not owner or admin");
+        require(msg.sender == owner() || msg.sender == admin, "USDC-ShB not owner or admin");
         _;
     }
 
@@ -117,7 +117,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
     /// @param _owner Address which can change L2 token implementation and upgrade the bridge
     /// implementation. The owner is the Governor and separate from the ProxyAdmin from now on, so that the Governor can call the bridge.
     function initialize(address _owner) external reentrancyGuardInitializer initializer {
-        require(_owner != address(0), "ShB owner 0");
+        require(_owner != address(0), "USDC-ShB owner 0");
         _transferOwnership(_owner);
     }
 
@@ -136,7 +136,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
     /// @notice Accepts transfer of admin rights. Only pending admin can accept the role.
     function acceptAdmin() external {
         address currentPendingAdmin = pendingAdmin;
-        require(msg.sender == currentPendingAdmin, "ShB not pending admin"); // Only proposed by current admin address can claim the admin rights
+        require(msg.sender == currentPendingAdmin, "USDC-ShB not pending admin"); // Only proposed by current admin address can claim the admin rights
 
         address previousAdmin = admin;
         admin = currentPendingAdmin;
@@ -155,8 +155,8 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
     /// @param _chainId The chain ID for which the l2Bridge address is being initialized.
     /// @param _l2BridgeAddress The address of the L2 bridge contract.
     function initializeChainGovernance(uint256 _chainId, address _l2BridgeAddress) external onlyOwnerOrAdmin {
-        require(l2BridgeAddress[_chainId] == address(0), "ShB: l2 bridge already set");
-        require(_l2BridgeAddress != address(0), "ShB: l2 bridge 0");
+        require(l2BridgeAddress[_chainId] == address(0), "USDC-ShB: l2 bridge already set");
+        require(_l2BridgeAddress != address(0), "USDC-ShB: l2 bridge 0");
         l2BridgeAddress[_chainId] = _l2BridgeAddress;
     }
 
@@ -166,7 +166,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
     /// @param _chainId The chain ID for which the l2Bridge address is being initialized.
     /// @param _l2BridgeAddress The address of the L2 bridge contract.
     function reinitializeChainGovernance(uint256 _chainId, address _l2BridgeAddress) external onlyOwner {
-        require(l2BridgeAddress[_chainId] != address(0), "ShB: l2 bridge not yet set");
+        require(l2BridgeAddress[_chainId] != address(0), "USDC-ShB: l2 bridge not yet set");
         l2BridgeAddress[_chainId] = _l2BridgeAddress;
     }
 
@@ -186,7 +186,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         uint256 _chainId,
         address _prevMsgSender,
         // solhint-disable-next-line no-unused-vars
-        uint256 _l2Value,
+        uint256,
         bytes calldata _data
     )
         external
@@ -196,12 +196,12 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         whenNotPaused
         returns (L2TransactionRequestTwoBridgesInner memory request)
     {
-        require(l2BridgeAddress[_chainId] != address(0), "ShB l2 bridge not deployed");
+        require(l2BridgeAddress[_chainId] != address(0), "USDC-ShB l2 bridge not deployed");
 
         (address _l1Token, uint256 _depositAmount, address _l2Receiver) = abi.decode(_data, (address, uint256, address));
-        require(_l1Token == L1_USDC_TOKEN, "ShB: Only USDC deposits supported");
-        require(BRIDGE_HUB.baseToken(_chainId) != _l1Token, "ShB: baseToken deposit not supported");
-        require(msg.value == 0, "ShB m.v > 0 for BH d.it 2");
+        require(_l1Token == L1_USDC_TOKEN, "USDC-ShB: Only USDC deposits supported");
+        require(BRIDGE_HUB.baseToken(_chainId) != _l1Token, "USDC-ShB: baseToken deposit not supported");
+        require(msg.value == 0, "USDC-ShB m.v > 0 for BH d.it 2");
 
         uint256 withdrawAmount = _depositFunds(_prevMsgSender, IERC20(_l1Token), _depositAmount);
         require(withdrawAmount == _depositAmount, "5T"); // The token has non-standard transfer logic
@@ -243,7 +243,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         onlyBridgehub
         whenNotPaused
     {
-        require(depositHappened[_chainId][_txHash] == 0x00, "ShB tx hap");
+        require(depositHappened[_chainId][_txHash] == 0x00, "USDC-ShB tx hap");
         depositHappened[_chainId][_txHash] = _txDataHash;
         emit BridgehubDepositFinalized(_chainId, _txDataHash, _txHash);
     }
@@ -322,13 +322,13 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         // dataHash == txDataHash
         require(
             depositHappened[_chainId][_l2TxHash] == keccak256(abi.encode(_depositSender, _l1Token, _amount)),
-            "ShB: d.it not hap"
+            "USDC-ShB: d.it not hap"
         );
         delete depositHappened[_chainId][_l2TxHash];
 
         if (!hyperbridgingEnabled[_chainId]) {
             // check that the chain has sufficient balance
-            require(chainBalance[_chainId][_l1Token] >= _amount, "ShB n funds");
+            require(chainBalance[_chainId][_l1Token] >= _amount, "USDC-ShB n funds");
             chainBalance[_chainId][_l1Token] -= _amount;
         }
 
@@ -392,7 +392,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
         if (!hyperbridgingEnabled[_chainId]) {
             // Check that the chain has sufficient balance
-            require(chainBalance[_chainId][l1Token] >= amount, "ShB not enough funds 2"); // not enough funds
+            require(chainBalance[_chainId][l1Token] >= amount, "USDC-ShB not enough funds 2"); // not enough funds
             chainBalance[_chainId][l1Token] -= amount;
         }
 
@@ -409,7 +409,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         bytes calldata _message,
         bytes32[] calldata _merkleProof
     ) internal view returns (address l1Receiver, address l1Token, uint256 amount) {
-        (l1Receiver, l1Token, amount) = _parseL2WithdrawalMessage(_chainId, _message);
+        (l1Receiver, l1Token, amount) = _parseL2WithdrawalMessage(_message);
         L2Message memory l2ToL1Message;
         {
             bool baseTokenWithdrawal = (l1Token == BRIDGE_HUB.baseToken(_chainId));
@@ -426,10 +426,10 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
             _message: l2ToL1Message,
             _proof: _merkleProof
         });
-        require(success, "ShB withd w proof"); // withdrawal wrong proof
+        require(success, "USDC-ShB withd w proof"); // withdrawal wrong proof
     }
 
-    function _parseL2WithdrawalMessage(uint256 _chainId, bytes memory _l2ToL1message)
+    function _parseL2WithdrawalMessage(bytes memory _l2ToL1message)
         internal
         view
         returns (address l1Receiver, address l1Token, uint256 amount)
@@ -442,10 +442,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         // It should be equal to the length of the following:
         // bytes4 function signature + address l1Receiver + uint256 amount + address l2Sender + bytes _additionalData =
         // = 4 + 20 + 32 + 32 + _additionalData.length >= 68 (bytes).
-
-        // So the data is expected to be at least 56 bytes long.
-        require(_l2ToL1message.length >= 56, "ShB wrong msg len"); // wrong message length
-
         (uint32 functionSignature, uint256 offset) = UnsafeBytes.readUint32(_l2ToL1message, 0);
         if (bytes4(functionSignature) == IL1ERC20Bridge.finalizeWithdrawal.selector) {
             // We use the IL1ERC20Bridge for backward compatibility with old withdrawals.
@@ -455,12 +451,12 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
             // Check that the message length is correct.
             // It should be equal to the length of the function signature + address + address + uint256 = 4 + 20 + 20 + 32 =
             // 76 (bytes).
-            require(_l2ToL1message.length == 76, "ShB wrong msg len 2");
+            require(_l2ToL1message.length == 76, "USDC-ShB wrong msg len 2");
             (l1Receiver, offset) = UnsafeBytes.readAddress(_l2ToL1message, offset);
             (l1Token, offset) = UnsafeBytes.readAddress(_l2ToL1message, offset);
             (amount, offset) = UnsafeBytes.readUint256(_l2ToL1message, offset);
         } else {
-            revert("ShB Incorrect message function selector");
+            revert("USDC-ShB Incorrect message function selector");
         }
     }
 
@@ -486,14 +482,12 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         return;
     }
 
-    function bridgehubDepositBaseToken(uint256 _chainId, address _prevMsgSender, address _l1Token, uint256 _amount)
+    function bridgehubDepositBaseToken(uint256, address, address, uint256)
         external
         payable
         virtual
-        onlyBridgehubOrEra(_chainId)
-        whenNotPaused
     {
-        return;
+        revert("NOT_IMPLEMENTED");
     }
 
     /*//////////////////////////////////////////////////////////////
