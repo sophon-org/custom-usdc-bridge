@@ -500,7 +500,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         override
         returns (bytes32 l2TxHash)
     {
-        return bytes32(0);
+        revert("NOT_IMPLEMENTED");
     }
 
     function finalizeWithdrawalLegacyErc20Bridge(uint256, uint256, uint16, bytes calldata, bytes32[] calldata)
@@ -509,7 +509,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         override
         returns (address l1Receiver, address l1Token, uint256 amount)
     {
-        return (address(0), address(0), 0);
+        revert("NOT_IMPLEMENTED");
     }
 
     function claimFailedDepositLegacyErc20Bridge(
@@ -522,7 +522,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         uint16,
         bytes32[] calldata
     ) external pure override {
-        return;
+        revert("NOT_IMPLEMENTED");
     }
 
     /*//////////////////////////////////////////////////////////////

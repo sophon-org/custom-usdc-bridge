@@ -51,6 +51,11 @@ $ source .env && export L2_WITHDRAWAL_HASH="YOUR_TX_HASH" && forge script ./scri
 $ forge test
 ```
 
+### Coverage
+```shell
+$ forge coverage --report lcov --no-match-coverage '^.*(node_modules|test|script)/.*$' && genhtml ./lcov.info --branch-coverage --rc derive_function_end_line=0 --output-directory report
+```
+
 ### Format
 
 ```shell
