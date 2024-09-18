@@ -9,19 +9,19 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
-import {IL1SharedBridge} from "./interfaces/IL1SharedBridge.sol";
-import {IL2Bridge} from "./interfaces/IL2Bridge.sol";
+import {IL1ERC20Bridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL1ERC20Bridge.sol";
+import {IL1SharedBridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL1SharedBridge.sol";
+import {IL2Bridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL2Bridge.sol";
 
-import {IMailbox} from "../state-transition/chain-interfaces/IMailbox.sol";
-import {L2Message, TxStatus} from "../common/Messaging.sol";
-import {UnsafeBytes} from "../common/libraries/UnsafeBytes.sol";
-import {ReentrancyGuard} from "../common/ReentrancyGuard.sol";
-import {AddressAliasHelper} from "../vendor/AddressAliasHelper.sol";
-import {ETH_TOKEN_ADDRESS, TWO_BRIDGES_MAGIC_VALUE} from "../common/Config.sol";
-import {IBridgehub, L2TransactionRequestTwoBridgesInner, L2TransactionRequestDirect} from "../bridgehub/IBridgehub.sol";
-import {IGetters} from "../state-transition/chain-interfaces/IGetters.sol";
-import {L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR} from "../common/L2ContractAddresses.sol";
+import {IMailbox} from "@era-contracts/l1-contracts/contracts/state-transition/chain-interfaces/IMailbox.sol";
+import {L2Message, TxStatus} from "@era-contracts/l1-contracts/contracts/common/Messaging.sol";
+import {UnsafeBytes} from "@era-contracts/l1-contracts/contracts/common/libraries/UnsafeBytes.sol";
+import {ReentrancyGuard} from "@era-contracts/l1-contracts/contracts/common/ReentrancyGuard.sol";
+import {AddressAliasHelper} from "@era-contracts/l1-contracts/contracts/vendor/AddressAliasHelper.sol";
+import {ETH_TOKEN_ADDRESS, TWO_BRIDGES_MAGIC_VALUE} from "@era-contracts/l1-contracts/contracts/common/Config.sol";
+import {IBridgehub, L2TransactionRequestTwoBridgesInner, L2TransactionRequestDirect} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
+import {IGetters} from "@era-contracts/l1-contracts/contracts/state-transition/chain-interfaces/IGetters.sol";
+import {L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR} from "@era-contracts/l1-contracts/contracts/common/L2ContractAddresses.sol";
 
 /// @author Matter Labs
 /// @custom:security-contact security@matterlabs.dev

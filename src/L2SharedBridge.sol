@@ -6,14 +6,14 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
-import {IL2SharedBridge} from "./interfaces/IL2SharedBridge.sol";
-import {IL2StandardToken} from "./interfaces/IL2StandardToken.sol";
+import {IL1ERC20Bridge} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL1ERC20Bridge.sol";
+import {IL2SharedBridge} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL2SharedBridge.sol";
+import {IL2StandardToken} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL2StandardToken.sol";
 
-import {L2StandardERC20} from "./L2StandardERC20.sol";
-import {AddressAliasHelper} from "../vendor/AddressAliasHelper.sol";
-import {L2ContractHelper, DEPLOYER_SYSTEM_CONTRACT, IContractDeployer} from "../L2ContractHelper.sol";
-import {SystemContractsCaller} from "../SystemContractsCaller.sol";
+import {L2StandardERC20} from "@era-contracts/l2-contracts/contracts/bridge/L2StandardERC20.sol";
+import {AddressAliasHelper} from "@era-contracts/l2-contracts/contracts/vendor/AddressAliasHelper.sol";
+import {L2ContractHelper, DEPLOYER_SYSTEM_CONTRACT, IContractDeployer} from "@era-contracts/l2-contracts/contracts/L2ContractHelper.sol";
+import {SystemContractsCaller} from "@era-contracts/l2-contracts/contracts/SystemContractsCaller.sol";
 
 /// @author Matter Labs
 /// @custom:security-contact security@matterlabs.dev
