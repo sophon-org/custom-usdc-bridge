@@ -3,12 +3,13 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {L1SharedBridge} from "../src/L1SharedBridge.sol";
+import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
 interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract FinalizeDepositScript is Script {
+contract FinalizeDepositScript is Script, DeploymentUtils {
     L1SharedBridge public bridge;
 
     function setUp() public {}
@@ -53,7 +54,7 @@ contract FinalizeDepositScript is Script {
         vm.startBroadcast();
 
         (FinalizationData memory data, bytes32[] memory merkleProof) = finalizeWithdrawalParams();
-        L1SharedBridge(vm.envAddress("SEPOLIA_CUSTOM_SHARED_BRIDGE_L1")).finalizeWithdrawal(
+        L1SharedBridge(getDeployedContract("L1SharedBridge")).finalizeWithdrawal(
             vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"),
             data.l1BatchNumber,
             data.l2MessageIndex,

@@ -4,18 +4,19 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IL2SharedBridge} from "@era-contracts/l2-contracts/contracts/bridge/interfaces/IL2SharedBridge.sol";
+import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
 interface Proxy {
     function admin() external view returns (address);
     function changeAdmin(address newAdmin) external;
 }
 
-contract WithdrawScript is Script {
+contract WithdrawScript is Script, DeploymentUtils {
     function setUp() public {}
 
     function run() public {
-        IERC20 token = IERC20(vm.envAddress("L2_USDC_TOKEN"));
-        address l2SharedBridge = vm.envAddress("SOPHON_CUSTOM_SHARED_BRIDGE_L2");
+        IERC20 token = IERC20(getDeployedContract("USDC"));
+        address l2SharedBridge = getDeployedContract("L2SharedBridge");
         uint256 amountToWithdraw = 1 * 10 ** 6; // 1 USDC
 
         vm.startBroadcast();
