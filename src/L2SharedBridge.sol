@@ -86,7 +86,6 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         // encode the message for l2ToL1log sent with withdraw initialization
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, _l1Receiver, L1_USDC_TOKEN, _amount);
-        // L2ContractHelper.sendMessageToL1(message);
         IL2Messenger(address(SYSTEM_CONTRACTS_OFFSET + 0x08)).sendToL1(message);
 
         emit WithdrawalInitiated(msg.sender, _l1Receiver, L2_USDC_TOKEN, _amount);

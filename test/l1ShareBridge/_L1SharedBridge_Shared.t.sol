@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L1SharedBridge} from "../src/L1SharedBridge.sol";
+import {L1SharedBridge} from "../../src/L1SharedBridge.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {TestnetERC20Token} from "@era-contracts/l1-contracts/contracts/dev-contracts/TestnetERC20Token.sol";
 
@@ -112,8 +112,6 @@ contract L1SharedBridgeTest is Test {
             address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1SharedBridge.initialize.selector, owner)
         );
         sharedBridge = L1SharedBridge(payable(sharedBridgeProxy));
-        // vm.prank(owner);
-        // sharedBridge.setL1Erc20Bridge(l1ERC20BridgeAddress);
         vm.prank(owner);
         sharedBridge.setEraPostDiamondUpgradeFirstBatch(eraPostUpgradeFirstBatch);
         vm.prank(owner);
