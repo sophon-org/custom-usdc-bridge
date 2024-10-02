@@ -129,11 +129,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         emit NewAdmin(previousAdmin, currentPendingAdmin);
     }
 
-    // TODO: do we need?
-    function receiveEth(uint256 _chainId) external payable {
-        require(BRIDGE_HUB.getHyperchain(_chainId) == msg.sender, "receiveEth not state transition");
-    }
-
     /// @dev Initializes the l2Bridge address by governance for a specific chain.
     /// @param _chainId The chain ID for which the l2Bridge address is being initialized.
     /// @param _l2BridgeAddress The address of the L2 bridge contract.
