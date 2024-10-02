@@ -5,8 +5,9 @@ import {Script, console} from "forge-std/Script.sol";
 import {L1SharedBridge} from "../src/L1SharedBridge.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
-contract DeployL1SharedBridge is Script {
+contract DeployL1SharedBridge is Script, DeploymentUtils {
     function run() public {
         // TODO: fix and send corresponding network and config names
         _run("", "");
@@ -32,7 +33,7 @@ contract DeployL1SharedBridge is Script {
         vm.startBroadcast();
 
         L1SharedBridge sharedBridgeImpl =
-            new L1SharedBridge(vm.envAddress("L1_USDC_TOKEN"), IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")));
+            new L1SharedBridge(getDeployedContract("USDC"), IBridgehub(getDeployedContract("Bridgehub")));
 
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
             address(sharedBridgeImpl),
@@ -42,6 +43,8 @@ contract DeployL1SharedBridge is Script {
 
         console.log("L1SharedBridge implementation deployed @", address(sharedBridgeImpl));
         console.log("L1SharedBridge proxy deployed @", address(sharedBridgeProxy));
+        saveDeployedContract("L1SharedBridge", address(sharedBridgeProxy));
+        saveDeployedContract("L1SharedBridge-impl", address(sharedBridgeImpl));
 
         vm.stopBroadcast();
         return (address(sharedBridgeProxy), address(sharedBridgeImpl));

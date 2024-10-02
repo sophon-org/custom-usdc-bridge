@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {L2SharedBridge} from "../src/L2SharedBridge.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
-contract DeployL2SharedBridge is Script {
+contract DeployL2SharedBridge is Script, DeploymentUtils {
     function run() public {
         // TODO: fix and send corresponding network and config names
         _run("", "");
@@ -40,6 +41,9 @@ contract DeployL2SharedBridge is Script {
 
         console.log("L2SharedBridge implementation deployed @", address(sharedBridgeImpl));
         console.log("L2SharedBridge proxy deployed @", address(sharedBridgeProxy));
+        saveDeployedContract("L2SharedBridge", address(sharedBridgeProxy));
+        saveDeployedContract("L2SharedBridge-impl", address(sharedBridgeImpl));
+
         console.log("IMPORTANT: L1SharedBridge must be initialised with the L2SharedBridge address.");
         console.log(
             "L1SharedBridge(address(sharedBridgeProxy)).initializeChainGovernance(531050104, SOPHON_CUSTOM_SHARED_BRIDGE_L2)"
