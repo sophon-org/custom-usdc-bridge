@@ -102,22 +102,12 @@ contract L1SharedBridgeTest is Test {
         eraErc20BridgeAddress = makeAddr("eraErc20BridgeAddress");
 
         token = new TestnetERC20Token("TestnetERC20Token", "TET", 18);
-        sharedBridgeImpl = new L1SharedBridge({
-            _l1UsdcAddress: address(token),
-            _bridgehub: IBridgehub(bridgehubAddress),
-            _eraChainId: eraChainId,
-            _eraDiamondProxy: eraDiamondProxy
-        });
+        sharedBridgeImpl =
+            new L1SharedBridge({_l1UsdcAddress: address(token), _bridgehub: IBridgehub(bridgehubAddress)});
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
             address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1SharedBridge.initialize.selector, owner)
         );
         sharedBridge = L1SharedBridge(payable(sharedBridgeProxy));
-        vm.prank(owner);
-        sharedBridge.setEraPostDiamondUpgradeFirstBatch(eraPostUpgradeFirstBatch);
-        vm.prank(owner);
-        sharedBridge.setEraPostLegacyBridgeUpgradeFirstBatch(eraPostUpgradeFirstBatch);
-        vm.prank(owner);
-        sharedBridge.setEraLegacyBridgeLastDepositTime(1, 0);
         vm.prank(owner);
         sharedBridge.initializeChainGovernance(chainId, l2SharedBridge);
         vm.prank(owner);

@@ -31,12 +31,8 @@ contract DeployL1SharedBridge is Script {
 
         vm.startBroadcast();
 
-        L1SharedBridge sharedBridgeImpl = new L1SharedBridge(
-            vm.envAddress("L1_USDC_TOKEN"),
-            IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")),
-            vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"),
-            vm.envAddress("ERA_DIAMOND_PROXY")
-        );
+        L1SharedBridge sharedBridgeImpl =
+            new L1SharedBridge(vm.envAddress("L1_USDC_TOKEN"), IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")));
 
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
             address(sharedBridgeImpl),

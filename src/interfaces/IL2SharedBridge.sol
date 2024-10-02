@@ -26,7 +26,5 @@ interface IL2SharedBridge {
 
     function l2TokenAddress(address _l1Token) external view returns (address);
 
-    function l1Bridge() external view returns (address);
-
     function l1SharedBridge() external view returns (address);
 }

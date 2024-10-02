@@ -22,9 +22,7 @@ contract SharedBridgesTest is Test {
         // deploy implementation
         L1SharedBridge sharedBridgeImpl = new L1SharedBridge{salt: "1"}(
             vm.envAddress("L1_USDC_TOKEN"),
-            IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")), // Sepolia L1 Bridgehub
-            vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"), // Sophon chain ID
-            vm.envAddress("ERA_DIAMOND_PROXY") // Era Diamond Proxy);
+            IBridgehub(vm.envAddress("SEPOLIA_L1_BRIDGEHUB")) // Sepolia L1 Bridgehub
         );
 
         // deploy proxy

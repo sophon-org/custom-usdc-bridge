@@ -25,11 +25,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         );
     }
 
-    function test_bridgehubDepositBaseToken_NotImplemented() public {
-        vm.expectRevert("NOT_IMPLEMENTED");
-        sharedBridge.bridgehubDepositBaseToken(chainId, alice, address(token), 0);
-    }
-
     function test_bridgehubDeposit_unsupportedErc() public {
         vm.prank(bridgehubAddress);
         vm.expectRevert("USDC-ShB: Only USDC deposits supported");

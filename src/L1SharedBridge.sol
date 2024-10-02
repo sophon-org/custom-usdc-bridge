@@ -10,7 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IL1ERC20Bridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL1ERC20Bridge.sol";
-import {IL1SharedBridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL1SharedBridge.sol";
+import {IL1SharedBridge} from "./interfaces/IL1SharedBridge.sol";
 import {IL2Bridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL2Bridge.sol";
 
 import {IMailbox} from "@era-contracts/l1-contracts/contracts/state-transition/chain-interfaces/IMailbox.sol";
@@ -39,12 +39,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
     /// @dev Bridgehub smart contract that is used to operate with L2 via asynchronous L2 <-> L1 communication.
     IBridgehub public immutable override BRIDGE_HUB;
-
-    /// @dev Era's chainID
-    uint256 public immutable ERA_CHAIN_ID;
-
-    /// @dev The address of zkSync Era diamond proxy contract.
-    address public immutable ERA_DIAMOND_PROXY;
 
     /// @dev A mapping chainId => bridgeProxy. Used to store the bridge proxy's address, and to see if it has been deployed yet.
     mapping(uint256 chainId => address l2Bridge) public override l2BridgeAddress;
@@ -80,15 +74,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         _;
     }
 
-    /// @notice Checks that the message sender is the bridgehub or zkSync Era Diamond Proxy.
-    modifier onlyBridgehubOrEra(uint256 _chainId) {
-        require(
-            msg.sender == address(BRIDGE_HUB) || (_chainId == ERA_CHAIN_ID && msg.sender == ERA_DIAMOND_PROXY),
-            "L1SharedBridge: not bridgehub or era chain"
-        );
-        _;
-    }
-
     /// @notice Checks that the message sender is the shared bridge itself.
     modifier onlySelf() {
         require(msg.sender == address(this), "USDC-ShB not shared bridge");
@@ -103,14 +88,12 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
 
     /// @dev Contract is expected to be used as proxy implementation.
     /// @dev Initialize the implementation to prevent Parity hack.
-    constructor(address _l1UsdcAddress, IBridgehub _bridgehub, uint256 _eraChainId, address _eraDiamondProxy)
+    constructor(address _l1UsdcAddress, IBridgehub _bridgehub)
         reentrancyGuardInitializer
     {
         _disableInitializers();
         L1_USDC_TOKEN = _l1UsdcAddress;
         BRIDGE_HUB = _bridgehub;
-        ERA_CHAIN_ID = _eraChainId;
-        ERA_DIAMOND_PROXY = _eraDiamondProxy;
     }
 
     /// @dev Initializes a contract bridge for later use. Expected to be used in the proxy
@@ -196,7 +179,8 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         whenNotPaused
         returns (L2TransactionRequestTwoBridgesInner memory request)
     {
-        require(l2BridgeAddress[_chainId] != address(0), "USDC-ShB l2 bridge not deployed");
+        address l2Bridge = l2BridgeAddress[_chainId];
+        require(l2Bridge != address(0), "USDC-ShB l2 bridge not deployed");
 
         (address _l1Token, uint256 _depositAmount, address _l2Receiver) = abi.decode(_data, (address, uint256, address));
         require(_l1Token == L1_USDC_TOKEN, "USDC-ShB: Only USDC deposits supported");
@@ -212,18 +196,18 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
             chainBalance[_chainId][_l1Token] += _depositAmount;
         }
 
-        {
-            // Request the finalization of the deposit on the L2 side
-            bytes memory l2TxCalldata = _getDepositL2Calldata(_prevMsgSender, _l2Receiver, _l1Token, _depositAmount);
+        // Request the finalization of the deposit on the L2 side
+        bytes memory l2TxCalldata = abi.encodeCall(
+            IL2Bridge.finalizeDeposit, (_prevMsgSender, _l2Receiver, _l1Token, _depositAmount, abi.encode("USD Coin", "USDC", 6))
+        );
 
-            request = L2TransactionRequestTwoBridgesInner({
-                magicValue: TWO_BRIDGES_MAGIC_VALUE,
-                l2Contract: l2BridgeAddress[_chainId],
-                l2Calldata: l2TxCalldata,
-                factoryDeps: new bytes[](0),
-                txDataHash: txDataHash
-            });
-        }
+        request = L2TransactionRequestTwoBridgesInner({
+            magicValue: TWO_BRIDGES_MAGIC_VALUE,
+            l2Contract: l2Bridge,
+            l2Calldata: l2TxCalldata,
+            factoryDeps: new bytes[](0),
+            txDataHash: txDataHash
+        });
 
         emit BridgehubDepositInitiated({
             chainId: _chainId,
@@ -246,20 +230,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         require(depositHappened[_chainId][_txHash] == 0x00, "USDC-ShB tx hap");
         depositHappened[_chainId][_txHash] = _txDataHash;
         emit BridgehubDepositFinalized(_chainId, _txDataHash, _txHash);
-    }
-
-    /// @dev Generate a calldata for calling the deposit finalization on the L2 bridge contract
-    function _getDepositL2Calldata(address _l1Sender, address _l2Receiver, address _l1Token, uint256 _amount)
-        internal
-        view
-        returns (bytes memory)
-    {
-        (, bytes memory data1) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.name, ()));
-        (, bytes memory data2) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.symbol, ()));
-        (, bytes memory data3) = _l1Token.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
-        return abi.encodeCall(
-            IL2Bridge.finalizeDeposit, (_l1Sender, _l2Receiver, _l1Token, _amount, abi.encode(data1, data2, data3))
-        );
     }
 
     /// @dev Withdraw funds from the initiated deposit, that failed when finalizing on L2
@@ -458,71 +428,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         } else {
             revert("USDC-ShB Incorrect message function selector");
         }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            UNUSED BUT REQUIRED BY INTERFACE
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev The address of the WETH token on L1.
-    address public immutable override L1_WETH_TOKEN;
-
-    /// @dev Legacy bridge smart contract that used to hold ERC20 tokens.
-    IL1ERC20Bridge public override legacyBridge; // unused but interface requires it
-
-    function setEraPostDiamondUpgradeFirstBatch(uint256) external pure {
-        return;
-    }
-
-    function setEraPostLegacyBridgeUpgradeFirstBatch(uint256) external pure {
-        return;
-    }
-
-    function setEraLegacyBridgeLastDepositTime(uint256, uint256) external pure {
-        return;
-    }
-
-    function bridgehubDepositBaseToken(uint256, address, address, uint256)
-        external
-        payable
-        virtual
-    {
-        revert("NOT_IMPLEMENTED");
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ERA LEGACY FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function depositLegacyErc20Bridge(address, address, address, uint256, uint256, uint256, address)
-        external
-        payable
-        override
-        returns (bytes32)
-    {
-        revert("NOT_IMPLEMENTED");
-    }
-
-    function finalizeWithdrawalLegacyErc20Bridge(uint256, uint256, uint16, bytes calldata, bytes32[] calldata)
-        external
-        pure
-        override
-        returns (address, address, uint256)
-    {
-        revert("NOT_IMPLEMENTED");
-    }
-
-    function claimFailedDepositLegacyErc20Bridge(
-        address,
-        address,
-        uint256,
-        bytes32,
-        uint256,
-        uint256,
-        uint16,
-        bytes32[] calldata
-    ) external pure override {
-        revert("NOT_IMPLEMENTED");
     }
 
     /*//////////////////////////////////////////////////////////////

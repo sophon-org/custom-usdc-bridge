@@ -32,7 +32,6 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
 
     /// @dev Contract is expected to be used as proxy implementation.
     /// @dev Disable the initialization to prevent Parity hack.
-    // uint256 immutable ERA_CHAIN_ID; // TODO: check if i need this!
 
     /// @dev The address of the USDC token on L1.
     address public immutable L1_USDC_TOKEN;
@@ -41,7 +40,6 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     address public immutable L2_USDC_TOKEN;
 
     constructor(address _l1UsdcToken, address _l2UsdcToken) {
-        // ERA_CHAIN_ID = _eraChainId; // TODO: checke if we need this!
         L1_USDC_TOKEN = _l1UsdcToken;
         L2_USDC_TOKEN = _l2UsdcToken;
         _disableInitializers();
@@ -50,7 +48,7 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     /// @notice Initializes the bridge contract for later use. Expected to be used in the proxy.
     /// @param _l1SharedBridge The address of the L1 Bridge contract.
     /// _l1Bridge The address of the legacy L1 Bridge contract.
-    function initialize(address _l1SharedBridge) external reinitializer(2) {
+    function initialize(address _l1SharedBridge) external reinitializer(1) {
         require(_l1SharedBridge != address(0), "bf");
         l1SharedBridge = _l1SharedBridge;
     }
@@ -98,14 +96,6 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     function l2TokenAddress(address) public view override returns (address) {
         return L2_USDC_TOKEN;
     }
-
-    /*//////////////////////////////////////////////////////////////
-                            UNUSED BUT REQUIRED BY INTERFACE
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev The address of the legacy L1 erc20 bridge counterpart.
-    /// This is non-zero only on Era, and should not be renamed for backward compatibility with the SDKs.
-    address public override l1Bridge;
 
     /*//////////////////////////////////////////////////////////////
                             UTILS
