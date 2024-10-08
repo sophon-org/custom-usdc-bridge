@@ -3,7 +3,10 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {L2SharedBridge} from "../src/L2SharedBridge.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {
+    ITransparentUpgradeableProxy,
+    TransparentUpgradeableProxy
+} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
 contract DeployL2SharedBridge is Script, DeploymentUtils {
@@ -24,19 +27,42 @@ contract DeployL2SharedBridge is Script, DeploymentUtils {
         return _run(networkName, configName);
     }
 
-    function _run(string memory networkName, string memory configName) internal returns (address, address) {
+    function _run(string memory networkName, string memory configName)
+        internal
+        returns (address sharedBridgeProxy, address sharedBridgeImpl)
+    {
         // TODO: set proper addresses, maybe read from env
         address proxyAdmin = vm.envAddress("PROXY_ADMIN");
 
         vm.startBroadcast();
 
-        L2SharedBridge sharedBridgeImpl =
-            new L2SharedBridge(vm.envAddress("L1_USDC_TOKEN"), vm.envAddress("L2_USDC_TOKEN"));
+        sharedBridgeProxy = getDeployedContract("L2SharedBridge");
 
-        TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
-            address(sharedBridgeImpl),
-            proxyAdmin,
-            abi.encodeWithSelector(L2SharedBridge.initialize.selector, vm.envAddress("SEPOLIA_CUSTOM_SHARED_BRIDGE_L1"))
+        // deploy implementation
+        sharedBridgeImpl = address(
+            new L2SharedBridge(getDeployedContract("USDC", vm.envUint("SEPOLIA_CHAIN_ID")), getDeployedContract("USDC"))
+        );
+
+        // if proxy exists, upgrade proxy with new implementation
+        if (sharedBridgeProxy != address(0)) {
+            console.log("Upgrading L2SharedBridge");
+            if (msg.sender != proxyAdmin) revert("Only proxy admin can upgrade the implementation");
+            ITransparentUpgradeableProxy(payable(sharedBridgeProxy)).upgradeTo(sharedBridgeImpl);
+            console.log("L2SharedBridge implementation upgraded @", address(sharedBridgeImpl));
+            saveDeployedContract("L2SharedBridge-impl", address(sharedBridgeImpl));
+            return (sharedBridgeProxy, sharedBridgeImpl);
+        }
+
+        // deploy proxy
+        sharedBridgeProxy = address(
+            new TransparentUpgradeableProxy(
+                address(sharedBridgeImpl),
+                proxyAdmin,
+                abi.encodeWithSelector(
+                    L2SharedBridge.initialize.selector,
+                    getDeployedContract("L1SharedBridge", vm.envUint("SEPOLIA_CHAIN_ID"))
+                )
+            )
         );
 
         console.log("L2SharedBridge implementation deployed @", address(sharedBridgeImpl));
