@@ -40,6 +40,8 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     address public immutable L2_USDC_TOKEN;
 
     constructor(address _l1UsdcToken, address _l2UsdcToken) {
+        require(_l1UsdcToken != address(0), "USDC-ShB: l1UsdcToken is zero address");
+        require(address(_l2UsdcToken) != address(0), "USDC-ShB: l2UsdcToken is zero address");
         L1_USDC_TOKEN = _l1UsdcToken;
         L2_USDC_TOKEN = _l2UsdcToken;
         _disableInitializers();
