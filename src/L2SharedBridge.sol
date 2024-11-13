@@ -91,11 +91,13 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         emit WithdrawalInitiated(msg.sender, _l1Receiver, L2_USDC_TOKEN, _amount);
     }
 
-    function l1TokenAddress(address) external view returns (address) {
+    function l1TokenAddress(address _l2Token) external view returns (address) {
+        require(_l2Token == L2_USDC_TOKEN, "Unsupported L2 token");
         return L1_USDC_TOKEN;
     }
 
-    function l2TokenAddress(address) public view override returns (address) {
+    function l2TokenAddress(address _l1Token) public view override returns (address) {
+        require(_l1Token == L1_USDC_TOKEN, "Unsupported L1 token");
         return L2_USDC_TOKEN;
     }
 
