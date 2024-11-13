@@ -25,6 +25,13 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         );
     }
 
+    function test_bridgehubDeposit_wrongL2Value() public {
+        vm.prank(bridgehubAddress);
+        vm.expectRevert("USDC-ShB: l2Value must be 0");
+        // solhint-disable-next-line func-named-parameters
+        sharedBridge.bridgehubDeposit(chainId, alice, 1, abi.encode(address(token), amount, bob));
+    }
+
     function test_bridgehubDeposit_unsupportedErc() public {
         vm.prank(bridgehubAddress);
         vm.expectRevert("USDC-ShB: Only USDC deposits supported");
