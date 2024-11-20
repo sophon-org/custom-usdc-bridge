@@ -243,6 +243,42 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         });
     }
 
+    function test_finalizeWithdrawal_alreadyFinalized() public {
+        // set up balances and allowances
+        token.mint(address(sharedBridge), amount);
+        _setSharedBridgeChainBalance(chainId, address(token), amount);
+
+        bytes memory message =
+            abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
+        L2Message memory l2ToL1Message =
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
+
+        // mock the necessary calls
+        vm.mockCall(
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
+        );
+
+        vm.mockCall(
+            bridgehubAddress,
+            abi.encodeWithSelector(
+                IBridgehub.proveL2MessageInclusion.selector,
+                chainId,
+                l2BatchNumber,
+                l2MessageIndex,
+                l2ToL1Message,
+                merkleProof
+            ),
+            abi.encode(true)
+        );
+
+        // first withdrawal should succeed
+        sharedBridge.finalizeWithdrawal(chainId, l2BatchNumber, l2MessageIndex, l2TxNumberInBatch, message, merkleProof);
+
+        // second withdrawal with same parameters should fail
+        vm.expectRevert("Withdrawal is already finalized");
+        sharedBridge.finalizeWithdrawal(chainId, l2BatchNumber, l2MessageIndex, l2TxNumberInBatch, message, merkleProof);
+    }
+
     function test_finalizeWithdrawal_chainBalance() public {
         vm.deal(address(sharedBridge), amount);
 
