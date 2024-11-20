@@ -92,6 +92,8 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         reentrancyGuardInitializer
     {
         _disableInitializers();
+        require(_l1UsdcAddress != address(0), "USDC-ShB: l1 usdc is zero address");
+        require(address(_bridgehub) != address(0), "USDC-ShB: bridgehub is zero address");
         L1_USDC_TOKEN = _l1UsdcAddress;
         BRIDGE_HUB = _bridgehub;
     }
@@ -163,8 +165,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
     function bridgehubDeposit(
         uint256 _chainId,
         address _prevMsgSender,
-        // solhint-disable-next-line no-unused-vars
-        uint256,
+        uint256 _l2Value,
         bytes calldata _data
     )
         external
@@ -174,6 +175,7 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         whenNotPaused
         returns (L2TransactionRequestTwoBridgesInner memory request)
     {
+        require(_l2Value == 0, "USDC-ShB: l2Value must be 0");
         address l2Bridge = l2BridgeAddress[_chainId];
         require(l2Bridge != address(0), "USDC-ShB l2 bridge not deployed");
 

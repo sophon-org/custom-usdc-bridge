@@ -26,6 +26,7 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     using SafeERC20 for IERC20;
 
     uint160 constant SYSTEM_CONTRACTS_OFFSET = 0x8000; // 2^15
+    address constant L2_MESSENGER = address(SYSTEM_CONTRACTS_OFFSET + 0x08);
 
     /// @dev The address of the L1 shared bridge counterpart.
     address public override l1SharedBridge;
@@ -40,6 +41,8 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     address public immutable L2_USDC_TOKEN;
 
     constructor(address _l1UsdcToken, address _l2UsdcToken) {
+        require(_l1UsdcToken != address(0), "USDC-ShB: l1UsdcToken is zero address");
+        require(address(_l2UsdcToken) != address(0), "USDC-ShB: l2UsdcToken is zero address");
         L1_USDC_TOKEN = _l1UsdcToken;
         L2_USDC_TOKEN = _l2UsdcToken;
         _disableInitializers();
@@ -84,16 +87,18 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         // encode the message for l2ToL1log sent with withdraw initialization
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, _l1Receiver, L1_USDC_TOKEN, _amount);
-        IL2Messenger(address(SYSTEM_CONTRACTS_OFFSET + 0x08)).sendToL1(message);
+        IL2Messenger(L2_MESSENGER).sendToL1(message);
 
         emit WithdrawalInitiated(msg.sender, _l1Receiver, L2_USDC_TOKEN, _amount);
     }
 
-    function l1TokenAddress(address) external view returns (address) {
+    function l1TokenAddress(address _l2Token) external view returns (address) {
+        require(_l2Token == L2_USDC_TOKEN, "Unsupported L2 token");
         return L1_USDC_TOKEN;
     }
 
-    function l2TokenAddress(address) public view override returns (address) {
+    function l2TokenAddress(address _l1Token) public view override returns (address) {
+        require(_l1Token == L1_USDC_TOKEN, "Unsupported L1 token");
         return L2_USDC_TOKEN;
     }
 
