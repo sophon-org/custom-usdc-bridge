@@ -25,6 +25,10 @@ jobs:
         with:
           version: nightly
 
+      - name: Install NPM dependencies
+        run: |
+          yarn install
+
       - name: Show Forge version
         run: |
           forge --version
