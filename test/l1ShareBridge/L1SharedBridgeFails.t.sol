@@ -20,22 +20,73 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         new TransparentUpgradeableProxy(
             address(sharedBridgeImpl),
             proxyAdmin,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(L1SharedBridge.initialize.selector, address(0), eraPostUpgradeFirstBatch)
         );
+    }
+
+    function test_acceptAdmin_wrongAdmin() public {
+        vm.expectRevert("USDC-ShB not pending admin");
+        sharedBridge.acceptAdmin();
+    }
+
+    function test_initializeChainGovernance_bridgeAlreadySet() public {
+        vm.prank(sharedBridge.owner());
+        vm.expectRevert("USDC-ShB: l2 bridge already set");
+        sharedBridge.initializeChainGovernance(chainId, address(1));
+    }
+
+    function test_initializeChainGovernance_zeroAddress() public {
+        vm.prank(sharedBridge.owner());
+        vm.expectRevert("USDC-ShB: l2 bridge 0");
+        sharedBridge.initializeChainGovernance(2, address(0));
+    }
+
+    function test_reinitializeChainGovernance_neverSet() public {
+        vm.prank(sharedBridge.owner());
+        vm.expectRevert("USDC-ShB: l2 bridge not yet set");
+        sharedBridge.reinitializeChainGovernance(2, address(1));
+    }
+
+    function test_reinitializeChainGovernance_wrongCondition() public {
+        address randomL2Bridge = makeAddr("randomL2Bridge");
+        vm.prank(owner);
+        sharedBridge.initializeChainGovernance(123, randomL2Bridge);
+
+        vm.prank(owner);
+        vm.expectRevert(bytes("USDC-ShB: l2 bridge not yet set"));
+        sharedBridge.reinitializeChainGovernance(2, randomL2Bridge);
+    }
+
+    function test_reinitializeChainGovernance_nonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        sharedBridge.reinitializeChainGovernance(chainId, address(1));
     }
 
     function test_bridgehubDeposit_wrongL2Value() public {
         vm.prank(bridgehubAddress);
         vm.expectRevert("USDC-ShB: l2Value must be 0");
-        // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit(chainId, alice, 1, abi.encode(address(token), amount, bob));
+    }
+
+    function test_bridgehubDeposit_bridgeNotDeployed() public {
+        vm.prank(bridgehubAddress);
+        vm.expectRevert("USDC-ShB l2 bridge not deployed");
+        sharedBridge.bridgehubDeposit(2, alice, 0, abi.encode(address(token), amount, bob));
+    }
+
+    function test_bridgehubDeposit_zeroDepositAmount() public {
+        vm.expectRevert(bytes("6T"));
+        vm.prank(bridgehubAddress);
+        vm.mockCall(
+            bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
+        );
+        sharedBridge.bridgehubDeposit(chainId, alice, 0, abi.encode(address(token), 0, bob));
     }
 
     function test_bridgehubDeposit_unsupportedErc() public {
         vm.prank(bridgehubAddress);
         vm.expectRevert("USDC-ShB: Only USDC deposits supported");
-        // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit(chainId, alice, 0, abi.encode(l1WethAddress, amount, bob));
     }
 
@@ -49,7 +100,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
             bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
         );
         vm.expectRevert("USDC-ShB m.v > 0 for BH d.it 2");
-        // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit{value: amount}(chainId, alice, 0, abi.encode(address(token), amount, bob));
     }
 
@@ -64,7 +114,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         vm.mockCall(address(token), abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(10));
         bytes memory message = bytes("5T");
         vm.expectRevert(message);
-        // solhint-disable-next-line func-named-parameters
         sharedBridge.bridgehubDeposit(chainId, alice, 0, abi.encode(address(token), amount, bob));
     }
 
@@ -103,7 +152,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL1ToL2TransactionStatus.selector,
                 chainId,
@@ -137,7 +185,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL1ToL2TransactionStatus.selector,
                 chainId,
@@ -174,7 +221,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL1ToL2TransactionStatus.selector,
                 chainId,
@@ -216,7 +262,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL2MessageInclusion.selector,
                 chainId,
@@ -254,7 +299,6 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL2MessageInclusion.selector,
                 chainId,
@@ -341,5 +385,15 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
             _message: message,
             _merkleProof: merkleProof
         });
+    }
+
+    function test_pause_wrongOwner() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        sharedBridge.pause();
+    }
+
+    function test_unpause_wrongOwner() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        sharedBridge.unpause();
     }
 }

@@ -17,7 +17,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
         vm.prank(alice);
         token.approve(address(sharedBridge), amount);
         vm.prank(bridgehubAddress);
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         vm.mockCall(
             bridgehubAddress, abi.encodeWithSelector(IBridgehub.baseToken.selector), abi.encode(ETH_TOKEN_ADDRESS)
@@ -35,7 +34,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
     }
 
     function test_bridgehubConfirmL2Transaction() public {
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         bytes32 txDataHash = keccak256(abi.encode(alice, address(token), amount));
         emit BridgehubDepositFinalized(chainId, txDataHash, txHash);
@@ -52,7 +50,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL1ToL2TransactionStatus.selector,
                 chainId,
@@ -66,7 +63,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
             abi.encode(true)
         );
 
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         emit ClaimedFailedDepositSharedBridge({chainId: chainId, to: alice, l1Token: address(token), amount: amount});
         sharedBridge.claimFailedDeposit({
@@ -97,7 +93,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL2MessageInclusion.selector,
                 chainId,
@@ -109,7 +104,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
             abi.encode(true)
         );
 
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         emit WithdrawalFinalizedSharedBridge(chainId, alice, address(token), amount);
         sharedBridge.finalizeWithdrawal({
@@ -135,7 +129,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL2MessageInclusion.selector,
                 chainId,
@@ -147,7 +140,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
             abi.encode(true)
         );
 
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         emit WithdrawalFinalizedSharedBridge(chainId, alice, address(token), amount);
         sharedBridge.finalizeWithdrawal({
@@ -173,7 +165,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
 
         vm.mockCall(
             bridgehubAddress,
-            // solhint-disable-next-line func-named-parameters
             abi.encodeWithSelector(
                 IBridgehub.proveL2MessageInclusion.selector,
                 chainId,
@@ -185,7 +176,6 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
             abi.encode(true)
         );
 
-        // solhint-disable-next-line func-named-parameters
         vm.expectEmit(true, true, true, true, address(sharedBridge));
         emit WithdrawalFinalizedSharedBridge(chainId, alice, address(token), amount);
         sharedBridge.finalizeWithdrawal({
@@ -196,5 +186,19 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
             _message: message,
             _merkleProof: merkleProof
         });
+    }
+
+    function test_pause() public {
+        vm.prank(sharedBridge.owner());
+        sharedBridge.pause();
+        assertTrue(sharedBridge.paused());
+    }
+
+    function test_unpause() public {
+        vm.prank(sharedBridge.owner());
+        sharedBridge.pause();
+        vm.prank(sharedBridge.owner());
+        sharedBridge.unpause();
+        assertFalse(sharedBridge.paused());
     }
 }
