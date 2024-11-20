@@ -24,25 +24,20 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         );
     }
 
-    function test_acceptAdmin_wrongAdmin() public {
-        vm.expectRevert("USDC-ShB not pending admin");
-        sharedBridge.acceptAdmin();
-    }
-
     function test_initializeChainGovernance_bridgeAlreadySet() public {
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         vm.expectRevert("USDC-ShB: l2 bridge already set");
         sharedBridge.initializeChainGovernance(chainId, address(1));
     }
 
     function test_initializeChainGovernance_zeroAddress() public {
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         vm.expectRevert("USDC-ShB: l2 bridge 0");
         sharedBridge.initializeChainGovernance(2, address(0));
     }
 
     function test_reinitializeChainGovernance_neverSet() public {
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         vm.expectRevert("USDC-ShB: l2 bridge not yet set");
         sharedBridge.reinitializeChainGovernance(2, address(1));
     }
@@ -57,10 +52,10 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         sharedBridge.reinitializeChainGovernance(2, randomL2Bridge);
     }
 
-    function test_reinitializeChainGovernance_nonOwner() public {
+    function test_bridgehubDeposit_wrongCaller() public {
         vm.prank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
-        sharedBridge.reinitializeChainGovernance(chainId, address(1));
+        vm.expectRevert("USDC-ShB not BH");
+        sharedBridge.bridgehubDeposit(chainId, alice, 0, abi.encode(address(token), amount, bob));
     }
 
     function test_bridgehubDeposit_wrongL2Value() public {

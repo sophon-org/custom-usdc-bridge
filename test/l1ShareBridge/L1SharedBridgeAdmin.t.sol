@@ -16,6 +16,13 @@ contract L1SharedBridgeAdminTest is L1SharedBridgeTest {
         assertEq(sharedBridge.l2BridgeAddress(randomChainId), randomL2Bridge);
     }
 
+    function testAdminCanReinitializeChainGovernance() public {
+        address randomNewBridge = makeAddr("randomNewBridge");
+        vm.prank(owner);
+        sharedBridge.reinitializeChainGovernance(chainId, randomNewBridge);
+        assertEq(sharedBridge.l2BridgeAddress(chainId), randomNewBridge);
+    }
+
     function testAdminCanNotReinitializeChainGovernance() public {
         address randomNewBridge = makeAddr("randomNewBridge");
 
@@ -89,5 +96,17 @@ contract L1SharedBridgeAdminTest is L1SharedBridgeTest {
         vm.prank(admin);
         vm.expectRevert("Ownable: caller is not the owner");
         sharedBridge.unpause();
+    }
+
+    function test_onlyOwnerOrAdmin_whenCallerIsOwner() public {
+        vm.prank(owner);
+        sharedBridge.setPendingAdmin(alice);
+        assertEq(sharedBridge.pendingAdmin(), alice);
+    }
+
+    function test_onlyOwnerOrAdmin_whenCallerIsAdmin() public {
+        vm.prank(admin);
+        sharedBridge.setPendingAdmin(alice);
+        assertEq(sharedBridge.pendingAdmin(), alice);
     }
 }

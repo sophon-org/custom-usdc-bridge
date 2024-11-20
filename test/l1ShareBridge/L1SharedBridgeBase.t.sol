@@ -189,15 +189,15 @@ contract L1SharedBridgeTestBase is L1SharedBridgeTest {
     }
 
     function test_pause() public {
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         sharedBridge.pause();
         assertTrue(sharedBridge.paused());
     }
 
     function test_unpause() public {
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         sharedBridge.pause();
-        vm.prank(sharedBridge.owner());
+        vm.prank(owner);
         sharedBridge.unpause();
         assertFalse(sharedBridge.paused());
     }
