@@ -1,4 +1,6 @@
 ## Custom bridge for Native USDC
+[![codecov](https://codecov.io/gh/sophon-org/custom-usdc-bridge/graph/badge.svg?token=9YHYPFSMYH)](https://codecov.io/gh/sophon-org/custom-usdc-bridge)
+
 
 We want to use the canonical zkSync Bridge with a [custom bridge](https://docs.zksync.io/build/developer-reference/bridging-assets#custom-bridges-on-l1-and-l2) implementation that would work only for USDC (since we want to use the [native USDC](https://github.com/circlefin/stablecoin-evm/blob/master/doc/bridged_USDC_standard.md) and not the ERC20 that the zksync bridge deploys by default).
 

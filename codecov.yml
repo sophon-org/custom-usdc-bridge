@@ -1,9 +1,3 @@
-# interfaces are automatically ignored by forge coverage
-ignore:
-  - "test"               # ignore test/ folder
-  - "script"             # ignore scripts/ folder
-  - "libs"               # ignore libs/ folder
-
 comment:
   layout: " diff, flags, files"
   behavior: default
