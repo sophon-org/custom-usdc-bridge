@@ -74,12 +74,6 @@ contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgrade
         _;
     }
 
-    /// @notice Checks that the message sender is the shared bridge itself.
-    modifier onlySelf() {
-        require(msg.sender == address(this), "USDC-ShB not shared bridge");
-        _;
-    }
-
     /// @notice Checks that the message sender is either the owner or admin.
     modifier onlyOwnerOrAdmin() {
         require(msg.sender == owner() || msg.sender == admin, "USDC-ShB not owner or admin");
