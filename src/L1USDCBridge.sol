@@ -82,9 +82,7 @@ contract L1USDCBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeab
 
     /// @dev Contract is expected to be used as proxy implementation.
     /// @dev Initialize the implementation to prevent Parity hack.
-    constructor(address _l1UsdcAddress, IBridgehub _bridgehub)
-        reentrancyGuardInitializer
-    {
+    constructor(address _l1UsdcAddress, IBridgehub _bridgehub) reentrancyGuardInitializer {
         _disableInitializers();
         require(_l1UsdcAddress != address(0), "USDC-ShB: l1 usdc is zero address");
         require(address(_bridgehub) != address(0), "USDC-ShB: bridgehub is zero address");
@@ -156,12 +154,7 @@ contract L1USDCBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeab
     }
 
     /// @notice Initiates a deposit transaction within Bridgehub, used by `requestL2TransactionTwoBridges`.
-    function bridgehubDeposit(
-        uint256 _chainId,
-        address _prevMsgSender,
-        uint256 _l2Value,
-        bytes calldata _data
-    )
+    function bridgehubDeposit(uint256 _chainId, address _prevMsgSender, uint256 _l2Value, bytes calldata _data)
         external
         payable
         override
@@ -189,7 +182,8 @@ contract L1USDCBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeab
 
         // Request the finalization of the deposit on the L2 side
         bytes memory l2TxCalldata = abi.encodeCall(
-            IL2Bridge.finalizeDeposit, (_prevMsgSender, _l2Receiver, _l1Token, _depositAmount, abi.encode("USD Coin", "USDC", 6))
+            IL2Bridge.finalizeDeposit,
+            (_prevMsgSender, _l2Receiver, _l1Token, _depositAmount, abi.encode("USD Coin", "USDC", 6))
         );
 
         request = L2TransactionRequestTwoBridgesInner({

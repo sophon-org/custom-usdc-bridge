@@ -57,9 +57,7 @@ contract DeployL1USDCBridge is Script, DeploymentUtils {
         // deploy proxy
         sharedBridgeProxy = address(
             new TransparentUpgradeableProxy(
-                sharedBridgeImpl,
-                proxyAdmin,
-                abi.encodeWithSelector(L1USDCBridge.initialize.selector, deployerAddress)
+                sharedBridgeImpl, proxyAdmin, abi.encodeWithSelector(L1USDCBridge.initialize.selector, deployerAddress)
             )
         );
 

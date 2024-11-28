@@ -2,7 +2,10 @@
 
 pragma solidity 0.8.24;
 
-import {IBridgehub, L2TransactionRequestTwoBridgesInner} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
+import {
+    IBridgehub,
+    L2TransactionRequestTwoBridgesInner
+} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {IL1ERC20Bridge} from "./IL1ERC20Bridge.sol";
 
 /// @title L1 Bridge contract interface
@@ -35,37 +38,25 @@ interface IL1SharedBridge {
     );
 
     event BridgehubDepositBaseTokenInitiated(
-        uint256 indexed chainId,
-        address indexed from,
-        address l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed from, address l1Token, uint256 amount
     );
 
     event BridgehubDepositFinalized(
-        uint256 indexed chainId,
-        bytes32 indexed txDataHash,
-        bytes32 indexed l2DepositTxHash
+        uint256 indexed chainId, bytes32 indexed txDataHash, bytes32 indexed l2DepositTxHash
     );
 
     event WithdrawalFinalizedSharedBridge(
-        uint256 indexed chainId,
-        address indexed to,
-        address indexed l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed to, address indexed l1Token, uint256 amount
     );
 
     event ClaimedFailedDepositSharedBridge(
-        uint256 indexed chainId,
-        address indexed to,
-        address indexed l1Token,
-        uint256 amount
+        uint256 indexed chainId, address indexed to, address indexed l1Token, uint256 amount
     );
 
-    function isWithdrawalFinalized(
-        uint256 _chainId,
-        uint256 _l2BatchNumber,
-        uint256 _l2MessageIndex
-    ) external view returns (bool);
+    function isWithdrawalFinalized(uint256 _chainId, uint256 _l2BatchNumber, uint256 _l2MessageIndex)
+        external
+        view
+        returns (bool);
 
     function claimFailedDeposit(
         uint256 _chainId,
@@ -98,12 +89,10 @@ interface IL1SharedBridge {
     /// address _l1Token,
     /// uint256 _amount,
     /// address _l2Receiver
-    function bridgehubDeposit(
-        uint256 _chainId,
-        address _prevMsgSender,
-        uint256 _l2Value,
-        bytes calldata _data
-    ) external payable returns (L2TransactionRequestTwoBridgesInner memory request);
+    function bridgehubDeposit(uint256 _chainId, address _prevMsgSender, uint256 _l2Value, bytes calldata _data)
+        external
+        payable
+        returns (L2TransactionRequestTwoBridgesInner memory request);
 
     function bridgehubConfirmL2Transaction(uint256 _chainId, bytes32 _txDataHash, bytes32 _txHash) external;
 

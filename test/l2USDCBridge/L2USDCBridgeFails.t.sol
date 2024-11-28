@@ -18,9 +18,7 @@ contract L2USDCBridgeFailTest is L2USDCBridgeTest {
 
         vm.expectRevert(bytes("bf"));
         new TransparentUpgradeableProxy(
-            address(sharedBridgeImpl),
-            proxyAdmin,
-            abi.encodeWithSelector(L2USDCBridge.initialize.selector, address(0))
+            address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L2USDCBridge.initialize.selector, address(0))
         );
     }
 

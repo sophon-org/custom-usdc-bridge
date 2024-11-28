@@ -39,8 +39,7 @@ contract SharedBridgesTest is Test {
         vm.selectFork(sophonTestnet);
 
         // deploy implementation
-        L2USDCBridge sharedBridgeImpl =
-            new L2USDCBridge(vm.envAddress("L1_USDC_TOKEN"), vm.envAddress("L2_USDC_TOKEN"));
+        L2USDCBridge sharedBridgeImpl = new L2USDCBridge(vm.envAddress("L1_USDC_TOKEN"), vm.envAddress("L2_USDC_TOKEN"));
 
         // deploy proxy
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(

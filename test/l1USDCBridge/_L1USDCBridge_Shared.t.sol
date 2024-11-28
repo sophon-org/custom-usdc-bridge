@@ -102,8 +102,7 @@ contract L1USDCBridgeTest is Test {
         eraErc20BridgeAddress = makeAddr("eraErc20BridgeAddress");
 
         token = new TestnetERC20Token("TestnetERC20Token", "TET", 18);
-        sharedBridgeImpl =
-            new L1USDCBridge({_l1UsdcAddress: address(token), _bridgehub: IBridgehub(bridgehubAddress)});
+        sharedBridgeImpl = new L1USDCBridge({_l1UsdcAddress: address(token), _bridgehub: IBridgehub(bridgehubAddress)});
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
             address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1USDCBridge.initialize.selector, owner)
         );
