@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {L1SharedBridge} from "../src/L1SharedBridge.sol";
+import {L1USDCBridge} from "../src/L1USDCBridge.sol";
 import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
 interface IERC20 {
@@ -10,7 +10,7 @@ interface IERC20 {
 }
 
 contract FinalizeDepositScript is Script, DeploymentUtils {
-    L1SharedBridge public bridge;
+    L1USDCBridge public bridge;
 
     function setUp() public {}
 
@@ -21,7 +21,6 @@ contract FinalizeDepositScript is Script, DeploymentUtils {
         bytes message;
         address sender;
     }
-    // bytes32[] proof;
 
     function finalizeWithdrawalParams() public returns (FinalizationData memory, bytes32[] memory) {
         // grab all params except for proof (since it fails)
@@ -54,7 +53,7 @@ contract FinalizeDepositScript is Script, DeploymentUtils {
         vm.startBroadcast();
 
         (FinalizationData memory data, bytes32[] memory merkleProof) = finalizeWithdrawalParams();
-        L1SharedBridge(getDeployedContract("L1SharedBridge")).finalizeWithdrawal(
+        L1USDCBridge(getDeployedContract("L1USDCBridge")).finalizeWithdrawal(
             vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"),
             data.l1BatchNumber,
             data.l2MessageIndex,

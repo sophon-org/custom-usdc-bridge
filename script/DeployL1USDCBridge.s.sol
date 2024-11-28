@@ -2,14 +2,15 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {L2SharedBridge} from "../src/L2SharedBridge.sol";
+import {L1USDCBridge} from "../src/L1USDCBridge.sol";
+import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {
     ITransparentUpgradeableProxy,
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
 
-contract DeployL2SharedBridge is Script, DeploymentUtils {
+contract DeployL1USDCBridge is Script, DeploymentUtils {
     function run() public {
         // TODO: fix and send corresponding network and config names
         _run("", "");
@@ -32,54 +33,42 @@ contract DeployL2SharedBridge is Script, DeploymentUtils {
         returns (address sharedBridgeProxy, address sharedBridgeImpl)
     {
         // TODO: set proper addresses, maybe read from env
+        address deployerAddress = msg.sender;
         address proxyAdmin = vm.envAddress("PROXY_ADMIN");
 
         vm.startBroadcast();
 
-        sharedBridgeProxy = getDeployedContract("L2SharedBridge");
+        sharedBridgeProxy = getDeployedContract("L1USDCBridge");
 
         // deploy implementation
-        sharedBridgeImpl = address(
-            new L2SharedBridge(getDeployedContract("USDC", vm.envUint("SEPOLIA_CHAIN_ID")), getDeployedContract("USDC"))
-        );
+        sharedBridgeImpl =
+            address(new L1USDCBridge(getDeployedContract("USDC"), IBridgehub(getDeployedContract("Bridgehub"))));
 
         // if proxy exists, upgrade proxy with new implementation
         if (sharedBridgeProxy != address(0)) {
-            console.log("Upgrading L2SharedBridge");
+            console.log("Upgrading L1USDCBridge");
             if (msg.sender != proxyAdmin) revert("Only proxy admin can upgrade the implementation");
             ITransparentUpgradeableProxy(payable(sharedBridgeProxy)).upgradeTo(sharedBridgeImpl);
-            console.log("L2SharedBridge implementation upgraded @", address(sharedBridgeImpl));
-            saveDeployedContract("L2SharedBridge-impl", address(sharedBridgeImpl));
+            console.log("L1USDCBridge implementation upgraded @", sharedBridgeImpl);
+            saveDeployedContract("L1USDCBridge-impl", sharedBridgeImpl);
             return (sharedBridgeProxy, sharedBridgeImpl);
         }
 
         // deploy proxy
         sharedBridgeProxy = address(
             new TransparentUpgradeableProxy(
-                address(sharedBridgeImpl),
+                sharedBridgeImpl,
                 proxyAdmin,
-                abi.encodeWithSelector(
-                    L2SharedBridge.initialize.selector,
-                    getDeployedContract("L1SharedBridge", vm.envUint("SEPOLIA_CHAIN_ID"))
-                )
+                abi.encodeWithSelector(L1USDCBridge.initialize.selector, deployerAddress)
             )
         );
 
-        console.log("L2SharedBridge implementation deployed @", address(sharedBridgeImpl));
-        console.log("L2SharedBridge proxy deployed @", address(sharedBridgeProxy));
-        saveDeployedContract("L2SharedBridge", address(sharedBridgeProxy));
-        saveDeployedContract("L2SharedBridge-impl", address(sharedBridgeImpl));
-
-        console.log("IMPORTANT: L1SharedBridge must be initialised with the L2SharedBridge address.");
-        console.log(
-            "L1SharedBridge(address(sharedBridgeProxy)).initializeChainGovernance(531050104, SOPHON_CUSTOM_SHARED_BRIDGE_L2)"
-        );
-        console.log("Use the InitialiseL1Bridge script to do this.");
-        console.log("IMPORTANT: L2SharedBridge must be added as minter on the L2 USDC contract.");
-        console.log("Use the add-new-minter script on the USDC repo");
+        console.log("L1USDCBridge implementation deployed @", address(sharedBridgeImpl));
+        console.log("L1USDCBridge proxy deployed @", address(sharedBridgeProxy));
+        saveDeployedContract("L1USDCBridge", address(sharedBridgeProxy));
+        saveDeployedContract("L1USDCBridge-impl", address(sharedBridgeImpl));
 
         vm.stopBroadcast();
-
         return (address(sharedBridgeProxy), address(sharedBridgeImpl));
     }
 }

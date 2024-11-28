@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {L2SharedBridge} from "../../src/L2SharedBridge.sol";
+import {L2USDCBridge} from "../../src/L2USDCBridge.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -25,7 +25,7 @@ contract MockL2Messenger {
     }
 }
 
-contract L2SharedBridgeTest is Test {
+contract L2USDCBridgeTest is Test {
     using SafeERC20 for IERC20;
 
     event FinalizeDeposit(
@@ -35,9 +35,9 @@ contract L2SharedBridgeTest is Test {
         address indexed l2Sender, address indexed l1Receiver, address indexed l2Token, uint256 amount
     );
 
-    L2SharedBridge bridge;
+    L2USDCBridge bridge;
     MintableToken mockL2Token;
-    address l1SharedBridge;
+    address l1USDCBridge;
     address alice;
     address bob;
     address proxyAdmin;
@@ -48,17 +48,17 @@ contract L2SharedBridgeTest is Test {
     function setUp() public virtual {
         mockL2Token = new MintableToken();
         mockL2Token.initialize("Mock USDC", "USDC", 18);
-        l1SharedBridge = makeAddr("l1SharedBridge");
+        l1USDCBridge = makeAddr("l1USDCBridge");
         alice = makeAddr("alice");
         bob = makeAddr("bob");
         proxyAdmin = makeAddr("proxyAdmin");
 
-        L2SharedBridge sharedBridgeImpl = new L2SharedBridge(address(mockL2Token), address(mockL2Token));
+        L2USDCBridge sharedBridgeImpl = new L2USDCBridge(address(mockL2Token), address(mockL2Token));
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
             address(sharedBridgeImpl),
             proxyAdmin,
-            abi.encodeWithSelector(L2SharedBridge.initialize.selector, l1SharedBridge)
+            abi.encodeWithSelector(L2USDCBridge.initialize.selector, l1USDCBridge)
         );
-        bridge = L2SharedBridge(address(sharedBridgeProxy));
+        bridge = L2USDCBridge(address(sharedBridgeProxy));
     }
 }

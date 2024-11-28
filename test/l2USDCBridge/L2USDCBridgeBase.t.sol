@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {L2SharedBridgeTest} from "./_L2SharedBridge_Shared.t.sol";
+import {L2USDCBridgeTest} from "./_L2USDCBridge_Shared.t.sol";
 import {IL1ERC20Bridge} from "../../src/interfaces/IL1ERC20Bridge.sol";
 import {IL2Messenger} from "../../src/interfaces/IL2Messenger.sol";
 import {IL2SharedBridge} from "../../src/interfaces/IL2SharedBridge.sol";
@@ -12,16 +12,16 @@ contract MockL2Messenger {
     }
 }
 
-contract L2SharedBridgeTestBase is L2SharedBridgeTest {
+contract L2USDCBridgeTestBase is L2USDCBridgeTest {
     function testFinalizeDeposit() public {
         uint256 initialBalance = mockL2Token.balanceOf(bob);
-        address aliasedL1SharedBridge =
-            address(uint160(l1SharedBridge) + uint160(0x1111000000000000000000000000000000001111));
+        address aliasedL1USDCBridge =
+            address(uint160(l1USDCBridge) + uint160(0x1111000000000000000000000000000000001111));
 
         vm.expectEmit(true, true, true, true);
         emit FinalizeDeposit(alice, bob, address(mockL2Token), depositAmount);
 
-        vm.prank(aliasedL1SharedBridge);
+        vm.prank(aliasedL1USDCBridge);
         bridge.finalizeDeposit(alice, bob, address(mockL2Token), depositAmount, "");
 
         uint256 finalBalance = mockL2Token.balanceOf(bob);

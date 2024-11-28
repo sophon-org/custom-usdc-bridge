@@ -4,7 +4,7 @@
 
 We want to use the canonical zkSync Bridge with a [custom bridge](https://docs.zksync.io/build/developer-reference/bridging-assets#custom-bridges-on-l1-and-l2) implementation that would work only for USDC (since we want to use the [native USDC](https://github.com/circlefin/stablecoin-evm/blob/master/doc/bridged_USDC_standard.md) and not the ERC20 that the zksync bridge deploys by default).
 
-The repo implements the [src/L1SharedBridge.sol](https://github.com/sophon-org/custom-usdc-bridge/pull/1/files#diff-1698a2f52c7225fb2a4d7cf5241c28ce85cb4514ffac8a9ec30ab728c4065f6e) and [src/L2SharedBridge.sol](https://github.com/sophon-org/custom-usdc-bridge/pull/1/files#diff-ad529a25299727c85e9b20798cb94a45aaec2709bc7208400fea76e4c2cdb4be) which are custom bridge contracts based on the ones found on [MatterLabs era-contracts](https://github.com/matter-labs/era-contracts) (we've forked from [this](https://github.com/matter-labs/era-contracts.git#bce4b2d0f34bd87f1aaadd291772935afb1c3bd6) commit)
+The repo implements the [src/L1USDCBridge.sol](https://github.com/sophon-org/custom-usdc-bridge/pull/1/files#diff-1698a2f52c7225fb2a4d7cf5241c28ce85cb4514ffac8a9ec30ab728c4065f6e) and [src/L2USDCBridge.sol](https://github.com/sophon-org/custom-usdc-bridge/pull/1/files#diff-ad529a25299727c85e9b20798cb94a45aaec2709bc7208400fea76e4c2cdb4be) which are custom bridge contracts based on the ones found on [MatterLabs era-contracts](https://github.com/matter-labs/era-contracts) (we've forked from [this](https://github.com/matter-labs/era-contracts.git#bce4b2d0f34bd87f1aaadd291772935afb1c3bd6) commit)
 
 **Bridge/Withdrawal flow**
 
@@ -35,13 +35,13 @@ $ forge build --zksync
 
 ```shell
 # Deploy L1 Shared Bridge
-$ source .env && forge script ./script/DeployL1SharedBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
+$ source .env && forge script ./script/DeployL1USDCBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
 
 # Deploy L2 Shared Bridge
-$ source .env && forge script ./script/DeployL2SharedBridge.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
+$ source .env && forge script ./script/DeployL2USDCBridge.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
 
 # Initialise L1 Shared Bridge
-$ source .env && forge script ./script/InitialiseL1SharedBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --broadcast
+$ source .env && forge script ./script/InitialiseL1USDCBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --broadcast
 
 # Bridge from Sophon to Ethereum (L1 -> L2)
 $ source .env && forge script ./script/Bridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {L1SharedBridgeTest} from "./_L1SharedBridge_Shared.t.sol";
+import {L1USDCBridgeTest} from "./_L1USDCBridge_Shared.t.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {L1SharedBridge} from "../../src/L1SharedBridge.sol";
+import {L1USDCBridge} from "../../src/L1USDCBridge.sol";
 import {ETH_TOKEN_ADDRESS} from "@era-contracts/l1-contracts/contracts/common/Config.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {L2Message, TxStatus} from "@era-contracts/l1-contracts/contracts/common/Messaging.sol";
@@ -14,13 +14,13 @@ import {IMailbox} from "@era-contracts/l1-contracts/contracts/state-transition/c
 import {IL1ERC20Bridge} from "@era-contracts/l1-contracts/contracts/bridge/interfaces/IL1ERC20Bridge.sol";
 
 /// We are testing all the specified revert and require cases.
-contract L1SharedBridgeFailTest is L1SharedBridgeTest {
+contract L1USDCBridgeFailTest is L1USDCBridgeTest {
     function test_initialize_wrongOwner() public {
         vm.expectRevert("USDC-ShB owner 0");
         new TransparentUpgradeableProxy(
             address(sharedBridgeImpl),
             proxyAdmin,
-            abi.encodeWithSelector(L1SharedBridge.initialize.selector, address(0), eraPostUpgradeFirstBatch)
+            abi.encodeWithSelector(L1USDCBridge.initialize.selector, address(0), eraPostUpgradeFirstBatch)
         );
     }
 
@@ -251,7 +251,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
         L2Message memory l2ToL1Message =
-            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2USDCBridge, data: message});
 
         // mock the necessary calls
         vm.mockCall(
@@ -289,7 +289,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
         L2Message memory l2ToL1Message =
-            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2USDCBridge, data: message});
 
         vm.mockCall(
             bridgehubAddress,
@@ -326,7 +326,7 @@ contract L1SharedBridgeFailTest is L1SharedBridgeTest {
         bytes memory message =
             abi.encodePacked(IL1ERC20Bridge.finalizeWithdrawal.selector, alice, address(token), amount);
         L2Message memory l2ToL1Message =
-            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2SharedBridge, data: message});
+            L2Message({txNumberInBatch: l2TxNumberInBatch, sender: l2USDCBridge, data: message});
 
         vm.mockCall(
             bridgehubAddress,

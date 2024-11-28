@@ -18,18 +18,18 @@ interface MintableToken {
 }
 
 /// @author Sophon
-/// @notice Forked from ML L1SharedBridge contract
+/// @notice Forked from ML L1USDCBridge contract
 /// @custom:security-contact security@matterlabs.dev
 /// @notice The "default" bridge implementation for the ERC20 tokens. Note, that it does not
 /// support any custom token logic, i.e. rebase tokens' functionality is not supported.
-contract L2SharedBridge is IL2SharedBridge, Initializable {
+contract L2USDCBridge is IL2SharedBridge, Initializable {
     using SafeERC20 for IERC20;
 
     uint160 constant SYSTEM_CONTRACTS_OFFSET = 0x8000; // 2^15
     address constant L2_MESSENGER = address(SYSTEM_CONTRACTS_OFFSET + 0x08);
 
     /// @dev The address of the L1 shared bridge counterpart.
-    address public override l1SharedBridge;
+    address public override l1USDCBridge;
 
     /// @dev Contract is expected to be used as proxy implementation.
     /// @dev Disable the initialization to prevent Parity hack.
@@ -49,11 +49,11 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
     }
 
     /// @notice Initializes the bridge contract for later use. Expected to be used in the proxy.
-    /// @param _l1SharedBridge The address of the L1 Bridge contract.
+    /// @param _l1USDCBridge The address of the L1 Bridge contract.
     /// _l1Bridge The address of the legacy L1 Bridge contract.
-    function initialize(address _l1SharedBridge) external reinitializer(1) {
-        require(_l1SharedBridge != address(0), "bf");
-        l1SharedBridge = _l1SharedBridge;
+    function initialize(address _l1USDCBridge) external reinitializer(1) {
+        require(_l1USDCBridge != address(0), "bf");
+        l1USDCBridge = _l1USDCBridge;
     }
 
     /// @notice Finalize the deposit and mint funds
@@ -67,7 +67,7 @@ contract L2SharedBridge is IL2SharedBridge, Initializable {
         override
     {
         // Only the L1 bridge counterpart can initiate and finalize the deposit.
-        require(undoL1ToL2Alias(msg.sender) == l1SharedBridge, "mq");
+        require(undoL1ToL2Alias(msg.sender) == l1USDCBridge, "mq");
         MintableToken(L2_USDC_TOKEN).mint(_l2Receiver, _amount);
         emit FinalizeDeposit(_l1Sender, _l2Receiver, L2_USDC_TOKEN, _amount);
     }

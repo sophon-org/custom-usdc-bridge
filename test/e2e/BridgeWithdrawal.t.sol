@@ -8,7 +8,7 @@
 //     IBridgehub
 // } from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 // import {AdressAliasHelper} from "@era-contracts/l1-contracts/contracts/dev-contracts/test/AddressAliasHelperTest.sol";
-// import {L2SharedBridge} from "../../src/L2SharedBridge.sol";
+// import {L2USDCBridge} from "../../src/L2USDCBridge.sol";
 
 // // IERC20 MockUSDC compatible
 // interface IERC20 {
@@ -43,10 +43,10 @@
 //         IERC20(vm.envAddress("SOPH_TOKEN")).approve(vm.envAddress("SEPOLIA_SHARED_BRIDGE_L1"), type(uint256).max);
 
 //         vm.prank(alice);
-//         IERC20(usdc).approve(l1SharedBridge, amountToBridge);
+//         IERC20(usdc).approve(l1USDCBridge, amountToBridge);
 
-//         console.log("Allowance: ", IERC20(usdc).allowance(alice, l1SharedBridge));
-//         console.log("Allowance: ", IERC20(vm.envAddress("SOPH_TOKEN")).allowance(alice, l1SharedBridge));
+//         console.log("Allowance: ", IERC20(usdc).allowance(alice, l1USDCBridge));
+//         console.log("Allowance: ", IERC20(vm.envAddress("SOPH_TOKEN")).allowance(alice, l1USDCBridge));
 //         console.log("Balance: ", IERC20(usdc).balanceOf(alice));
 //         console.log("Balance: ", IERC20(vm.envAddress("SOPH_TOKEN")).balanceOf(alice));
 
@@ -76,7 +76,7 @@
 //                 l2GasLimit: L2_GAS_LIMIT, // TODO: it should take ~300'000
 //                 l2GasPerPubdataByteLimit: TX_GAS_PER_PUBDATA_BYTE_LIMIT, // TODO: how to calculate?
 //                 refundRecipient: address(0), // TODO: why is 0?
-//                 secondBridgeAddress: l1SharedBridge,
+//                 secondBridgeAddress: l1USDCBridge,
 //                 secondBridgeValue: 0,
 //                 secondBridgeCalldata: depositData
 //             })
@@ -87,14 +87,14 @@
 
 //         vm.selectFork(sophonTestnet);
 //         // finalise deposit on L2
-//         vm.prank(AdressAliasHelper.undoL1ToL2Alias(l1SharedBridge));
-//         L2SharedBridge(l2SharedBridge).finalizeDeposit(alice, alice, usdc, amountToBridge, depositData);
+//         vm.prank(AdressAliasHelper.undoL1ToL2Alias(l1USDCBridge));
+//         L2USDCBridge(l2USDCBridge).finalizeDeposit(alice, alice, usdc, amountToBridge, depositData);
 
 //         // asert balances before and after
 
 //         // withdraw on L2
 //         vm.prank(alice);
-//         L2SharedBridge(l2SharedBridge).withdraw(alice, address(0), amountToBridge);
+//         L2USDCBridge(l2USDCBridge).withdraw(alice, address(0), amountToBridge);
 
 //         ///// L1 CALLS /////
 //         vm.selectFork(sepoliaTestnet);

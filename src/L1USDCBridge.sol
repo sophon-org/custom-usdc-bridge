@@ -27,11 +27,11 @@ import {IGetters} from "@era-contracts/l1-contracts/contracts/state-transition/c
 import {L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR} from "@era-contracts/l1-contracts/contracts/common/L2ContractAddresses.sol";
 
 /// @author Sophon
-/// @notice Forked from ML L1SharedBridge contract
+/// @notice Forked from ML L1USDCBridge contract
 /// @custom:security-contact security@matterlabs.dev
 /// @dev Bridges assets between L1 and hyperchains, supporting both ETH and ERC20 tokens.
 /// @dev Designed for use with a proxy for upgradability.
-contract L1SharedBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeable, PausableUpgradeable {
+contract L1USDCBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
     /// @dev The address of the USDC token on L1.

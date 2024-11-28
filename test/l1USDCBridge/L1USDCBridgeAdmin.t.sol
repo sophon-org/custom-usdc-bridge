@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {L1SharedBridgeTest} from "./_L1SharedBridge_Shared.t.sol";
+import {L1USDCBridgeTest} from "./_L1USDCBridge_Shared.t.sol";
 
 /// We are testing all the specified revert and require cases.
-contract L1SharedBridgeAdminTest is L1SharedBridgeTest {
+contract L1USDCBridgeAdminTest is L1USDCBridgeTest {
     uint256 internal randomChainId = 123456;
 
     function testAdminCanInitializeChainGovernance() public {

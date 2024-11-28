@@ -6,11 +6,11 @@ import {Test} from "forge-std/Test.sol";
 
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {L1SharedBridge} from "../../src/L1SharedBridge.sol";
+import {L1USDCBridge} from "../../src/L1USDCBridge.sol";
 import {IBridgehub} from "@era-contracts/l1-contracts/contracts/bridgehub/IBridgehub.sol";
 import {TestnetERC20Token} from "@era-contracts/l1-contracts/contracts/dev-contracts/TestnetERC20Token.sol";
 
-contract L1SharedBridgeTest is Test {
+contract L1USDCBridgeTest is Test {
     using stdStorage for StdStorage;
 
     event BridgehubDepositBaseTokenInitiated(
@@ -47,12 +47,12 @@ contract L1SharedBridgeTest is Test {
         uint256 amount
     );
 
-    L1SharedBridge sharedBridgeImpl;
-    L1SharedBridge sharedBridge;
+    L1USDCBridge sharedBridgeImpl;
+    L1USDCBridge sharedBridge;
     address bridgehubAddress;
     address l1ERC20BridgeAddress;
     address l1WethAddress;
-    address l2SharedBridge;
+    address l2USDCBridge;
     TestnetERC20Token token;
     uint256 eraPostUpgradeFirstBatch;
 
@@ -87,7 +87,7 @@ contract L1SharedBridgeTest is Test {
         // bob = makeAddr("bob");
         l1WethAddress = makeAddr("weth");
         l1ERC20BridgeAddress = makeAddr("l1ERC20Bridge");
-        l2SharedBridge = makeAddr("l2SharedBridge");
+        l2USDCBridge = makeAddr("l2USDCBridge");
 
         txHash = bytes32(uint256(uint160(makeAddr("txHash"))));
         l2BatchNumber = uint256(uint160(makeAddr("l2BatchNumber")));
@@ -103,15 +103,15 @@ contract L1SharedBridgeTest is Test {
 
         token = new TestnetERC20Token("TestnetERC20Token", "TET", 18);
         sharedBridgeImpl =
-            new L1SharedBridge({_l1UsdcAddress: address(token), _bridgehub: IBridgehub(bridgehubAddress)});
+            new L1USDCBridge({_l1UsdcAddress: address(token), _bridgehub: IBridgehub(bridgehubAddress)});
         TransparentUpgradeableProxy sharedBridgeProxy = new TransparentUpgradeableProxy(
-            address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1SharedBridge.initialize.selector, owner)
+            address(sharedBridgeImpl), proxyAdmin, abi.encodeWithSelector(L1USDCBridge.initialize.selector, owner)
         );
-        sharedBridge = L1SharedBridge(payable(sharedBridgeProxy));
+        sharedBridge = L1USDCBridge(payable(sharedBridgeProxy));
         vm.prank(owner);
-        sharedBridge.initializeChainGovernance(chainId, l2SharedBridge);
+        sharedBridge.initializeChainGovernance(chainId, l2USDCBridge);
         vm.prank(owner);
-        sharedBridge.initializeChainGovernance(eraChainId, l2SharedBridge);
+        sharedBridge.initializeChainGovernance(eraChainId, l2USDCBridge);
         vm.prank(owner);
         sharedBridge.setPendingAdmin(admin);
         vm.prank(admin);
