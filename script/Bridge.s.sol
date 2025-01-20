@@ -13,24 +13,43 @@ interface MockUSDC {
     function approve(address usr, uint256 wad) external;
 }
 
+interface MasterMinter {
+    function owner() external view returns (address);
+    function configureMinter(uint256 minterId) external;
+}
+
 contract BridgeScript is Script, DeploymentUtils {
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
-        uint256 amountToBridge = 1 * 10 ** 6; // 1 USDC
+        uint256 amountToBridge = 0.1 * 10 ** 6; // 1 USDC
 
-        approve(getDeployedContract("SOPH"), type(uint256).max);
+        // approve(getDeployedContract("SOPH"), type(uint256).max);
         approve(getDeployedContract("USDC"), amountToBridge);
-        bridge(amountToBridge);
 
+        // read FAILED from env
+        bool failed = vm.envBool("FAILED");
+        if (failed) {
+            MasterMinter masterMinter = MasterMinter(0x910FCc44534A88394Aa92CeF0ef9b359c6CfF023);
+            console.log("Configuring MasterMinter allowance to 0 for USDC...");
+            // check owneship
+            if (masterMinter.owner() != msg.sender) {
+                console.log("MasterMinter is not owned by this contract");
+                return;
+            }
+            masterMinter.configureMinter(0); // allowance that the minter can mint
+        } else {
+            console.log("Bridging %s USDC...", amountToBridge);
+            bridge(amountToBridge);
+        }
         vm.stopBroadcast();
     }
 
     function bridge(uint256 amountToBridge) public {
         uint256 L2_GAS_LIMIT = 435293;
         uint256 TX_GAS_PER_PUBDATA_BYTE_LIMIT = 800;
-        uint256 CHAIN_ID = vm.envUint("SOPHON_SEPOLIA_CHAIN_ID"); // Sophon Sepolia
+        uint256 CHAIN_ID = vm.envUint("SOPHON_CHAIN_ID"); // Sophon
 
         // Prepare data for the bridgehubDeposit call
         bytes memory depositData = abi.encode(
@@ -48,16 +67,16 @@ contract BridgeScript is Script, DeploymentUtils {
         // // TODO: why baseCost is returning a very high number?
         // console.log("Base cost:", baseCost);
 
-        IBridgehub(getDeployedContract("Bridgehub")).requestL2TransactionTwoBridges( // No vale needed if base token is not ETH (e.g SOPH)
+    IBridgehub(getDeployedContract("Bridgehub")).requestL2TransactionTwoBridges( // No vale needed if base token is not ETH (e.g SOPH)
             L2TransactionRequestTwoBridgesOuter({
                 chainId: CHAIN_ID,
-                mintValue: 10e18, // base tokens (SOPH for Sophon Sepolia, ETH for Sepolia)
+                // mintValue: 0.1e6, // base tokens (SOPH for Sophon Sepolia, ETH for Sepolia)
                 // mintValue: baseCost,
                 l2Value: 0,
                 l2GasLimit: L2_GAS_LIMIT, // TODO: it should take ~300'000
                 l2GasPerPubdataByteLimit: TX_GAS_PER_PUBDATA_BYTE_LIMIT, // TODO: how to calculate?
                 refundRecipient: address(0),
-                secondBridgeAddress: getDeployedContract("L1SharedBridge"),
+                secondBridgeAddress: getDeployedContract("L1USDCBridge"),
                 secondBridgeValue: 0,
                 secondBridgeCalldata: depositData
             })
@@ -66,7 +85,7 @@ contract BridgeScript is Script, DeploymentUtils {
 
     function approve(address token, uint256 amount) public {
         IERC20 token = IERC20(token);
-        address l1Bridge = getDeployedContract("L1SharedBridge");
+        address l1Bridge = getDeployedContract("L1USDCBridge");
 
         // approve shared bridge to spend base tokens
         console.log("Checking %s allowance...", token.symbol());

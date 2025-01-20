@@ -8,8 +8,9 @@ import {
     TransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {DeploymentUtils} from "../utils/DeploymentUtils.sol";
+import {TestExt} from "forge-zksync-std/TestExt.sol";
 
-contract DeployL2USDCBridge is Script, DeploymentUtils {
+contract DeployL2USDCBridge is Script, TestExt, DeploymentUtils {
     function run() public {
         // TODO: fix and send corresponding network and config names
         _run("", "");
@@ -33,20 +34,30 @@ contract DeployL2USDCBridge is Script, DeploymentUtils {
     {
         // TODO: set proper addresses, maybe read from env
         address proxyAdmin = vm.envAddress("PROXY_ADMIN");
+        address paymaster = vm.envAddress("PAYMASTER_ADDRESS");
+
+        // Encode paymaster input
+        bytes memory paymaster_encoded_input = abi.encodeWithSelector(
+            bytes4(keccak256("general(bytes)")),
+            bytes("0x")
+        );
 
         vm.startBroadcast();
-
+        
         sharedBridgeProxy = getDeployedContract("L2USDCBridge");
 
         // deploy implementation
-        sharedBridgeImpl = address(
-            new L2USDCBridge(getDeployedContract("USDC", vm.envUint("SEPOLIA_CHAIN_ID")), getDeployedContract("USDC"))
-        );
+        vmExt.zkUsePaymaster(paymaster, paymaster_encoded_input);
+        sharedBridgeImpl = 0x1EeA0f29bcd9E52b5FD1AC7C616caF61993c86E4;
+        // sharedBridgeImpl = address(
+        //     new L2USDCBridge(getDeployedContract("USDC", vm.envUint("CHAIN_ID")), getDeployedContract("USDC"))
+        // );
 
         // if proxy exists, upgrade proxy with new implementation
         if (sharedBridgeProxy != address(0)) {
             console.log("Upgrading L2USDCBridge");
             if (msg.sender != proxyAdmin) revert("Only proxy admin can upgrade the implementation");
+            vmExt.zkUsePaymaster(paymaster, paymaster_encoded_input);
             ITransparentUpgradeableProxy(payable(sharedBridgeProxy)).upgradeTo(sharedBridgeImpl);
             console.log("L2USDCBridge implementation upgraded @", address(sharedBridgeImpl));
             saveDeployedContract("L2USDCBridge-impl", address(sharedBridgeImpl));
@@ -54,13 +65,14 @@ contract DeployL2USDCBridge is Script, DeploymentUtils {
         }
 
         // deploy proxy
+        vmExt.zkUsePaymaster(paymaster, paymaster_encoded_input);
         sharedBridgeProxy = address(
             new TransparentUpgradeableProxy(
                 address(sharedBridgeImpl),
                 proxyAdmin,
                 abi.encodeWithSelector(
                     L2USDCBridge.initialize.selector,
-                    getDeployedContract("L1USDCBridge", vm.envUint("SEPOLIA_CHAIN_ID"))
+                    getDeployedContract("L1USDCBridge", vm.envUint("CHAIN_ID"))
                 )
             )
         );
@@ -72,7 +84,7 @@ contract DeployL2USDCBridge is Script, DeploymentUtils {
 
         console.log("IMPORTANT: L1USDCBridge must be initialised with the L2USDCBridge address.");
         console.log(
-            "L1USDCBridge(address(sharedBridgeProxy)).initializeChainGovernance(531050104, SOPHON_CUSTOM_SHARED_BRIDGE_L2)"
+            "L1USDCBridge(address(sharedBridgeProxy)).initializeChainGovernance(50104, SOPHON_CUSTOM_SHARED_BRIDGE_L2)"
         );
         console.log("Use the InitialiseL1Bridge script to do this.");
         console.log("IMPORTANT: L2USDCBridge must be added as minter on the L2 USDC contract.");

@@ -1,5 +1,5 @@
 [profile.default]
-src = "contracts"
+src = "src"
 out = "out"
 libs = ["lib"]
 auto_detect_solc = true
@@ -9,8 +9,12 @@ fs_permissions = [{ access = "read-write", path = "./deployments" }]
 
 [etherscan]
 sepoliaTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SEPOLIA_VERIFIER_URL}", chain = 11155111 }
-sophonTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SOPHON_SEPOLIA_VERIFIER_URL}", chain = 531050104 } 
+sophonTestnet = { key = "${ETHERSCAN_API_KEY}", url = "${SOPHON_TESTNET_VERIFIER_URL}", chain = 531050104 } 
+sophon = { key = "${ETHERSCAN_API_KEY}", url = "${SOPHON_VERIFIER_URL}", chain = 50104 } 
+ethereum = { key = "${ETHERSCAN_API_KEY}", url = "${VERIFIER_URL}", chain = 1 } 
 
 [rpc_endpoints]
 sepoliaTestnet = "${SEPOLIA_RPC_URL}"
-sophonTestnet = "${SOPHON_RPC_URL}"
+sophonTestnet = "${SOPHON_TESTNET_RPC_URL}"
+sophon = "${SOPHON_RPC_URL}"
+ethereum = "${RPC_URL}"

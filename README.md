@@ -28,29 +28,29 @@ The flow to bridge and withdraw using custom bridges is the same as when bridgin
 $ forge build
 
 # zkSync build
-$ forge build --zksync
+$ forge build --zksync --contracts ./src/
 ```
 
 ### Scripts
 
 ```shell
 # Deploy L1 Shared Bridge
-$ source .env && forge script ./script/DeployL1USDCBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --verify --broadcast
+$ source .env && forge script ./script/DeployL1USDCBridge.s.sol --rpc-url ethereum --private-key $PRIVATE_KEY --verify --broadcast
 
 # Deploy L2 Shared Bridge
-$ source .env && forge script ./script/DeployL2USDCBridge.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
+$ source .env && forge script ./script/DeployL2USDCBridge.s.sol --rpc-url sophon --private-key $PRIVATE_KEY --zksync --broadcast --verify --slow
 
 # Initialise L1 Shared Bridge
-$ source .env && forge script ./script/InitialiseL1USDCBridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --broadcast
+$ source .env && forge script ./script/InitialiseL1USDCBridge.s.sol --rpc-url ethereum --private-key $PRIVATE_KEY --broadcast
 
 # Bridge from Sophon to Ethereum (L1 -> L2)
-$ source .env && forge script ./script/Bridge.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
+$ source .env && forge script ./script/Bridge.s.sol --rpc-url ethereum --private-key $PRIVATE_KEY --ffi --broadcast
 
 # Withdraw from Sophon to Ethereum (L2 -> L1)
-$ source .env && forge script ./script/Withdraw.s.sol --rpc-url sophonTestnet --private-key $PRIVATE_KEY --zksync --slow -vvvv --broadcast
+$ source .env && forge script ./script/Withdraw.s.sol --rpc-url sophon --private-key $PRIVATE_KEY --zksync --slow -vvvv --broadcast
 
 # Finalise withdrawal on Ethereum
-$ source .env && export L2_WITHDRAWAL_HASH="YOUR_TX_HASH" && forge script ./script/FinalizeWithdrawal.s.sol --rpc-url sepoliaTestnet --private-key $PRIVATE_KEY --ffi --broadcast
+$ source .env && export L2_WITHDRAWAL_HASH="YOUR_TX_HASH" && forge script ./script/FinalizeWithdrawal.s.sol --rpc-url ethereum --private-key $PRIVATE_KEY --ffi --broadcast
 ```
 
 ### Test

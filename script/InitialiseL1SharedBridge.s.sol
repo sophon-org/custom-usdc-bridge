@@ -9,17 +9,17 @@ contract InitialiseL1USDCBridge is Script, DeploymentUtils {
     function run() public {
         vm.startBroadcast();
 
-        uint256 sophonSepoliaChainId = vm.envUint("SOPHON_SEPOLIA_CHAIN_ID");
+        uint256 sophonChainId = vm.envUint("SOPHON_CHAIN_ID");
         // if first time, call initializeChainGovernance, else call reinitializeChainGovernance
         L1USDCBridge(getDeployedContract("L1USDCBridge")).initializeChainGovernance(
-            sophonSepoliaChainId, getDeployedContract("L2USDCBridge", sophonSepoliaChainId)
+            sophonChainId, getDeployedContract("L2USDCBridge", sophonChainId)
         );
         // L1USDCBridge(getDeployedContract("L1USDCBridge")).reinitializeChainGovernance(
-        //     sophonSepoliaChainId, getDeployedContract("L2USDCBridge", sophonSepoliaChainId)
+        //     sophonChainId, getDeployedContract("L2USDCBridge", sophonChainId)
         // );
         console.log(
             "L1USDCBridge successfully initialised with the L2USDCBridge address: ",
-            vm.envAddress("SOPHON_CUSTOM_SHARED_BRIDGE_L2")
+            getDeployedContract("L2USDCBridge", sophonChainId)
         );
 
         vm.stopBroadcast();
