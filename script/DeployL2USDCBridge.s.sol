@@ -37,13 +37,10 @@ contract DeployL2USDCBridge is Script, TestExt, DeploymentUtils {
         address paymaster = vm.envAddress("PAYMASTER_ADDRESS");
 
         // Encode paymaster input
-        bytes memory paymaster_encoded_input = abi.encodeWithSelector(
-            bytes4(keccak256("general(bytes)")),
-            bytes("0x")
-        );
+        bytes memory paymaster_encoded_input = abi.encodeWithSelector(bytes4(keccak256("general(bytes)")), bytes("0x"));
 
         vm.startBroadcast();
-        
+
         sharedBridgeProxy = getDeployedContract("L2USDCBridge");
 
         // deploy implementation
@@ -71,8 +68,7 @@ contract DeployL2USDCBridge is Script, TestExt, DeploymentUtils {
                 address(sharedBridgeImpl),
                 proxyAdmin,
                 abi.encodeWithSelector(
-                    L2USDCBridge.initialize.selector,
-                    getDeployedContract("L1USDCBridge", vm.envUint("CHAIN_ID"))
+                    L2USDCBridge.initialize.selector, getDeployedContract("L1USDCBridge", vm.envUint("CHAIN_ID"))
                 )
             )
         );

@@ -20,7 +20,7 @@ contract MintableToken is MockERC20 {
 }
 
 contract MockL2Messenger {
-    function sendToL1(bytes memory message) view external returns (bytes32) {
+    function sendToL1(bytes memory message) external view returns (bytes32) {
         return keccak256(message);
     }
 }
