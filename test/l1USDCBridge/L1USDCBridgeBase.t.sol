@@ -201,4 +201,27 @@ contract L1USDCBridgeTestBase is L1USDCBridgeTest {
         sharedBridge.unpause();
         assertFalse(sharedBridge.paused());
     }
+
+    function test_reinitializeV2() public {
+        address newOwner = makeAddr("newOwner");
+        sharedBridge.reinitializeV2(newOwner);
+        // verify new owner is set
+        assertEq(sharedBridge.owner(), newOwner);
+    }
+
+    function test_reinitializeV2_revertZeroAddress() public {
+        // should revert if trying to set zero address as owner
+        vm.expectRevert("USDC-ShB owner 0");
+        sharedBridge.reinitializeV2(address(0));
+    }
+
+    function test_reinitializeV2_revertAlreadyInitialized() public {
+        address newOwner = makeAddr("newOwner");
+        // first initialization
+        sharedBridge.reinitializeV2(newOwner);
+
+        // try to initialize again
+        vm.expectRevert("Initializable: contract is already initialized");
+        sharedBridge.reinitializeV2(makeAddr("anotherOwner"));
+    }
 }
