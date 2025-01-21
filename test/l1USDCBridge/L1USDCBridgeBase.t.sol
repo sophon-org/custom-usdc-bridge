@@ -219,7 +219,7 @@ contract L1USDCBridgeTestBase is L1USDCBridgeTest {
         address newOwner = makeAddr("newOwner");
         // first initialization
         sharedBridge.reinitializeV2(newOwner);
-        
+
         // try to initialize again
         vm.expectRevert("Initializable: contract is already initialized");
         sharedBridge.reinitializeV2(makeAddr("anotherOwner"));
