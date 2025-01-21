@@ -28,7 +28,7 @@ contract ChangeProxyAdminMigration is Script, DeploymentUtils {
 
         // print Safe transaction details
         console.log("\n=== Safe Transaction Data ===");
-        console.log("From:", L1_USDC_BRIDGE);
+        console.log("From:", PROXY_ADMIN);
         console.log("To:", L1_USDC_BRIDGE);
         console.log("Value: 0");
         console.log("Data:", vm.toString(changeAdminData));

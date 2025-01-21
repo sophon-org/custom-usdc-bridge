@@ -49,6 +49,7 @@ contract MigrateL1USDCBridgeV2 is Script, DeploymentUtils {
         );
 
         console.log("\n=== Safe Transaction Data ===");
+        console.log("From:", PROXY_ADMIN);
         console.log("To:", proxyAddress);
         console.log("Value: 0");
         console.log("Data:", vm.toString(upgradeCallData));
