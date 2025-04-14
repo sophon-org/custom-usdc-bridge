@@ -90,6 +90,14 @@ contract L1USDCBridge is IL1SharedBridge, ReentrancyGuard, Ownable2StepUpgradeab
         BRIDGE_HUB = _bridgehub;
     }
 
+    /// @dev Reinitializes the contract to set a new owner directly
+    /// @param _newOwner Address which will become the new owner
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    function reinitializeV2(address _newOwner) external reinitializer(2) {
+        require(_newOwner != address(0), "USDC-ShB owner 0");
+        _transferOwnership(_newOwner);
+    }
+
     /// @dev Initializes a contract bridge for later use. Expected to be used in the proxy
     /// @param _owner Address which can change L2 token implementation and upgrade the bridge
     /// implementation. The owner is the Governor and separate from the ProxyAdmin from now on, so that the Governor can call the bridge.
